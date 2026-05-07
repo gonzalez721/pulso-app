@@ -9,10 +9,10 @@ export interface MeetResult {
 function slugify(name: string): string {
   return name
     .toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '') // quita acentos
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
-    .split('-').slice(0, 2).join('-') // solo primeras 2 palabras
+    .split('-').slice(0, 2).join('-')
 }
 
 function shortHash(estudiante: string, asesor: string, fecha: Date): string {
@@ -30,21 +30,52 @@ export async function createMeetSession(params: {
   asesorNombre: string
   estudianteNombre: string
 }): Promise<MeetResult> {
-  const asesorSlug    = slugify(params.asesorNombre)
+  const asesorSlug = slugify(params.asesorNombre)
   const estudianteSlug = slugify(params.estudianteNombre)
-  const mes = params.fechaInicio.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
-    .replace(/ /g, '').replace('.', '').toLowerCase()
   const hash = shortHash(params.estudianteEmail, params.asesorEmail, params.fechaInicio)
+  const roomName = `pulso-${asesorSlug}-${estudianteSlug}-${hash}`
 
-  // Ej: pulso-sofia-ramirez-carlos-lopez-07may-a3f9b2
-  const roomName = `pulso-${asesorSlug}-${estudianteSlug}-${mes}-${hash}`
+  const apiKey = process.env.DAILY_API_KEY
+  if (!apiKey) throw new Error('DAILY_API_KEY no configurada')
 
+  const response = await fetch('https://api.daily.co/v1/rooms', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      name: roomName,
+      privacy: 'public',
+      properties: {
+        exp: Math.floor(params.fechaInicio.getTime() / 1000) + params.duracionMin * 60 + 3600,
+        enable_prejoin_ui: false,
+      },
+    }),
+  })
+
+  if (!response.ok) {
+    const err = await response.text()
+    // Si la sala ya existe, construimos el link de todas formas
+    if (response.status === 409) {
+      return { linkMeet: `https://pulsopacto.daily.co/${roomName}`, googleCalendarEventId: null, calendarEventUrl: null }
+    }
+    throw new Error(`Daily.co error: ${err}`)
+  }
+
+  const data = await response.json() as { url: string }
   return {
-    linkMeet: `https://meet.jit.si/${roomName}`,
+    linkMeet: data.url,
     googleCalendarEventId: null,
     calendarEventUrl: null,
   }
 }
 
-// Kept for compatibility — Jitsi rooms don't need explicit deletion
-export async function deleteMeetSession(_eventId: string): Promise<void> {}
+export async function deleteMeetSession(roomName: string): Promise<void> {
+  const apiKey = process.env.DAILY_API_KEY
+  if (!apiKey) return
+  await fetch(`https://api.daily.co/v1/rooms/${roomName}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+  }).catch(() => {})
+}
