@@ -6,12 +6,14 @@ export interface MeetResult {
   calendarEventUrl: string | null
 }
 
-function generateMeetCode(seed: string): string {
-  const hash = crypto.createHash('sha256').update(seed).digest('hex')
-  const chars = 'abcdefghijklmnopqrstuvwxyz'
-  const pick = (offset: number, len: number) =>
-    Array.from({ length: len }, (_, i) => chars[parseInt(hash[offset + i], 16) % 26]).join('')
-  return `${pick(0, 3)}-${pick(3, 4)}-${pick(7, 3)}`
+function generateRoomName(params: {
+  asesorEmail: string
+  estudianteEmail: string
+  fechaInicio: Date
+}): string {
+  const seed = `${params.asesorEmail}-${params.estudianteEmail}-${params.fechaInicio.getTime()}`
+  const hash = crypto.createHash('sha256').update(seed).digest('hex').slice(0, 8)
+  return `pulso-${hash}`
 }
 
 export async function createGoogleMeetSession(params: {
@@ -24,10 +26,9 @@ export async function createGoogleMeetSession(params: {
   asesorNombre: string
   estudianteNombre: string
 }): Promise<MeetResult> {
-  const seed = `${params.asesorEmail}-${params.estudianteEmail}-${params.fechaInicio.getTime()}`
-  const code = generateMeetCode(seed)
+  const room = generateRoomName(params)
   return {
-    linkMeet: `https://meet.google.com/${code}`,
+    linkMeet: `https://8x8.vc/${room}`,
     googleCalendarEventId: null,
     calendarEventUrl: null,
   }
