@@ -35,39 +35,39 @@ export async function createMeetSession(params: {
   const hash = shortHash(params.estudianteEmail, params.asesorEmail, params.fechaInicio)
   const roomName = `pulso-${asesorSlug}-${estudianteSlug}-${hash}`
 
+  const fallbackUrl = `https://pulsopacto.daily.co/${roomName}`
   const apiKey = process.env.DAILY_API_KEY
-  if (!apiKey) throw new Error('DAILY_API_KEY no configurada')
+  if (!apiKey) return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
 
-  const response = await fetch('https://api.daily.co/v1/rooms', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      name: roomName,
-      privacy: 'public',
-      properties: {
-        exp: Math.floor(params.fechaInicio.getTime() / 1000) + params.duracionMin * 60 + 3600,
-        enable_prejoin_ui: false,
+  try {
+    const response = await fetch('https://api.daily.co/v1/rooms', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
       },
-    }),
-  })
+      body: JSON.stringify({
+        name: roomName,
+        privacy: 'public',
+        properties: {
+          exp: Math.floor(params.fechaInicio.getTime() / 1000) + params.duracionMin * 60 + 3600,
+          enable_prejoin_ui: false,
+        },
+      }),
+    })
 
-  if (!response.ok) {
-    const err = await response.text()
-    // Si la sala ya existe, construimos el link de todas formas
     if (response.status === 409) {
-      return { linkMeet: `https://pulsopacto.daily.co/${roomName}`, googleCalendarEventId: null, calendarEventUrl: null }
+      return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
     }
-    throw new Error(`Daily.co error: ${err}`)
-  }
 
-  const data = await response.json() as { url: string }
-  return {
-    linkMeet: data.url,
-    googleCalendarEventId: null,
-    calendarEventUrl: null,
+    if (!response.ok) {
+      return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
+    }
+
+    const data = await response.json() as { url: string }
+    return { linkMeet: data.url, googleCalendarEventId: null, calendarEventUrl: null }
+  } catch {
+    return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
   }
 }
 

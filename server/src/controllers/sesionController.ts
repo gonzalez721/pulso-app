@@ -57,6 +57,7 @@ export async function getDisponibilidad(req: AuthRequest, res: Response): Promis
 }
 
 export async function bookSesion(req: AuthRequest, res: Response): Promise<void> {
+  try {
   const { asesorId, fechaHora, temasAgenda } = req.body
 
   if (!asesorId || !fechaHora) {
@@ -120,6 +121,10 @@ export async function bookSesion(req: AuthRequest, res: Response): Promise<void>
   }).catch(() => {})
 
   res.status(201).json(sesion)
+  } catch (err) {
+    console.error('bookSesion error:', err)
+    res.status(500).json({ error: 'Error al crear la sesión' })
+  }
 }
 
 export async function cancelSesion(req: AuthRequest, res: Response): Promise<void> {
