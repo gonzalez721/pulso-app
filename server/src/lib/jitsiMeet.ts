@@ -37,7 +37,12 @@ export async function createMeetSession(params: {
 
   const fallbackUrl = `https://pulsopacto.daily.co/${roomName}`
   const apiKey = process.env.DAILY_API_KEY
-  if (!apiKey) return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
+  console.log('[Daily.co] apiKey present:', !!apiKey, '| roomName:', roomName)
+
+  if (!apiKey) {
+    console.log('[Daily.co] No API key, using fallback')
+    return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
+  }
 
   try {
     const response = await fetch('https://api.daily.co/v1/rooms', {
@@ -56,6 +61,9 @@ export async function createMeetSession(params: {
       }),
     })
 
+    const body = await response.text()
+    console.log('[Daily.co] status:', response.status, '| body:', body)
+
     if (response.status === 409) {
       return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
     }
@@ -64,9 +72,11 @@ export async function createMeetSession(params: {
       return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
     }
 
-    const data = await response.json() as { url: string }
+    const data = JSON.parse(body) as { url: string }
+    console.log('[Daily.co] Room created:', data.url)
     return { linkMeet: data.url, googleCalendarEventId: null, calendarEventUrl: null }
-  } catch {
+  } catch (err) {
+    console.error('[Daily.co] Exception:', err)
     return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
   }
 }
