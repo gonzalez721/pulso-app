@@ -28,7 +28,7 @@ export function BookSessionModal({ open, onClose }: Props) {
 
   const dateStr = selectedDate?.toISOString().split('T')[0]
   const { data: asesores, isLoading } = useDisponibilidad(dateStr)
-  const { mutate: book, isPending } = useBookSesion()
+  const { mutate: book, isPending, error } = useBookSesion()
 
   const today = new Date()
   const [calMonth, setCalMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
@@ -223,6 +223,11 @@ export function BookSessionModal({ open, onClose }: Props) {
                 <Row label="Temas" value={selectedTemas.join(', ')} />
               )}
             </div>
+            {error && (
+              <p className="text-xs text-red-500 font-medium text-center bg-red-50 rounded-2xl p-3">
+                Error: {(error as any)?.response?.data?.error ?? (error as any)?.message ?? 'No se pudo conectar al servidor'}
+              </p>
+            )}
             <Button onClick={handleBook} loading={isPending} fullWidth size="lg">
               ✅ Confirmar sesión
             </Button>
