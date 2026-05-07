@@ -1,6 +1,14 @@
 import OpenAI from 'openai'
 
-export const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+let _openai: OpenAI | null = null
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    const key = process.env.OPENAI_API_KEY
+    if (!key) throw new Error('OPENAI_API_KEY no configurada')
+    _openai = new OpenAI({ apiKey: key })
+  }
+  return _openai
+}
 
 export interface InsightItem {
   titulo: string
@@ -33,7 +41,7 @@ Responde SOLO con un array JSON válido con exactamente 3 objetos, cada uno con:
 Ejemplo: [{"titulo":"Gasto en comida alto","descripcion":"Gastaste 40% más en comida que la semana pasada","icono":"🍕"}]`
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
@@ -71,7 +79,7 @@ Presupuesto semanal: $${data.presupuesto}
 Responde con texto directo, sin JSON, en español, de forma motivadora y específica.`
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.8,
