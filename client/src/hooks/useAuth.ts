@@ -40,7 +40,7 @@ export function useLogout() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: () => (refreshToken ? authApi.logout(refreshToken) : Promise.resolve()),
+    mutationFn: (): Promise<any> => (refreshToken ? authApi.logout(refreshToken) : Promise.resolve()),
     onSettled: () => {
       logout()
       queryClient.clear()
