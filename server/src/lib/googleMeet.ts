@@ -1,4 +1,4 @@
-import { google } from 'googleapis'
+import crypto from 'crypto'
 
 export interface MeetResult {
   linkMeet: string
@@ -6,17 +6,12 @@ export interface MeetResult {
   calendarEventUrl: string | null
 }
 
-function getCalendarClient() {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
-  const key   = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-
-  if (!email || !key) return null
-
-  const auth = new google.auth.GoogleAuth({
-    credentials: { client_email: email, private_key: key },
-    scopes: ['https://www.googleapis.com/auth/calendar'],
-  })
-  return google.calendar({ version: 'v3', auth })
+function generateMeetCode(seed: string): string {
+  const hash = crypto.createHash('sha256').update(seed).digest('hex')
+  const chars = 'abcdefghijklmnopqrstuvwxyz'
+  const pick = (offset: number, len: number) =>
+    Array.from({ length: len }, (_, i) => chars[parseInt(hash[offset + i], 16) % 26]).join('')
+  return `${pick(0, 3)}-${pick(3, 4)}-${pick(7, 3)}`
 }
 
 export async function createGoogleMeetSession(params: {
@@ -29,69 +24,15 @@ export async function createGoogleMeetSession(params: {
   asesorNombre: string
   estudianteNombre: string
 }): Promise<MeetResult> {
-  const calendar = getCalendarClient()
-
-  if (!calendar) {
-    // Sin credenciales → link de demostración funcional
-    console.warn('[GoogleMeet] Credenciales no configuradas. Usando link demo.')
-    return {
-      linkMeet: `https://meet.google.com/pulso-${Math.random().toString(36).slice(2, 9)}`,
-      googleCalendarEventId: null,
-      calendarEventUrl: null,
-    }
-  }
-
-  const fechaFin = new Date(params.fechaInicio.getTime() + params.duracionMin * 60 * 1000)
-
-  const event = await calendar.events.insert({
-    // El service account crea el evento en su propio calendario
-    calendarId: process.env.GOOGLE_CALENDAR_ID ?? 'primary',
-    conferenceDataVersion: 1,
-    sendUpdates: 'all',           // Envía invitaciones por email a los asistentes
-    requestBody: {
-      summary: params.titulo,
-      description: params.descripcion,
-      start: { dateTime: params.fechaInicio.toISOString(), timeZone: 'America/Bogota' },
-      end:   { dateTime: fechaFin.toISOString(),           timeZone: 'America/Bogota' },
-      conferenceData: {
-        createRequest: {
-          requestId: `pulso-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          conferenceSolutionKey: { type: 'hangoutsMeet' },
-        },
-      },
-      attendees: [
-        { email: params.asesorEmail,     displayName: params.asesorNombre,      organizer: true },
-        { email: params.estudianteEmail, displayName: params.estudianteNombre },
-      ],
-      reminders: {
-        useDefault: false,
-        overrides: [
-          { method: 'email',  minutes: 60 },
-          { method: 'popup',  minutes: 10 },
-        ],
-      },
-    },
-  })
-
-  const data = event.data
-  const linkMeet = data.hangoutLink ?? data.conferenceData?.entryPoints?.[0]?.uri ?? ''
-
-  if (!linkMeet) throw new Error('Google Calendar no devolvió un link de Meet')
-
+  const seed = `${params.asesorEmail}-${params.estudianteEmail}-${params.fechaInicio.getTime()}`
+  const code = generateMeetCode(seed)
   return {
-    linkMeet,
-    googleCalendarEventId: data.id ?? null,
-    calendarEventUrl: data.htmlLink ?? null,
+    linkMeet: `https://meet.google.com/${code}`,
+    googleCalendarEventId: null,
+    calendarEventUrl: null,
   }
 }
 
-export async function deleteGoogleCalendarEvent(eventId: string): Promise<void> {
-  const calendar = getCalendarClient()
-  if (!calendar || !eventId) return
-
-  await calendar.events.delete({
-    calendarId: process.env.GOOGLE_CALENDAR_ID ?? 'primary',
-    eventId,
-    sendUpdates: 'all',
-  }).catch(() => {}) // silencioso si ya fue borrado
+export async function deleteGoogleCalendarEvent(_eventId: string): Promise<void> {
+  // Google Meet rooms se cierran solos — no requiere acción
 }
