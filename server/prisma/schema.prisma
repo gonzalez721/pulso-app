@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  password           String
+  nombre             String
+  universidad        String?
+  semestre           Int?
+  mensualidadMensual Int?
+  appsPago           String[]
+  onboardingComplete Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  perfil        PerfilFinanciero?
+  transacciones Transaccion[]
+  metas         Meta[]
+  sesiones      Sesion[]
+  moodCheckins  MoodCheckin[]
+}
+
+model PerfilFinanciero {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  objetivo               String?
+  categoriasGasto        Json     @default("{}")
+  dificultadesReportadas String[]
+  preferencias           Json     @default("{}")
+  resumenIA              String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model Transaccion {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monto       Float
+  categoria   String
+  descripcion String?
+  fecha       DateTime @default(now())
+  metodoPago  String?
+  comprobante String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, fecha])
+}
+
+model Meta {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tipoMeta      String
+  montoObjetivo Float
+  montoGastado  Float    @default(0)
+  fechaInicio   DateTime
+  fechaFin      DateTime
+  activa        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId, activa])
+}
+
+model Asesor {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  password         String   @default("")
+  nombre           String
+  carrera          String
+  semestre         Int
+  bio              String?
+  fotoUrl          String?
+  disponibilidad   Json     @default("[]")
+  googleCalendarId String?
+  activo           Boolean  @default(true)
+  sesiones         Sesion[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Sesion {
+  id                   String   @id @default(cuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asesorId             String
+  asesor               Asesor   @relation(fields: [asesorId], references: [id])
+  fechaHora            DateTime
+  duracionMin          Int      @default(20)
+  estado               String   @default("programada")
+  linkMeet             String?
+  googleCalendarEventId String?
+  temasAgenda          String[]
+  observaciones        Observacion?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([userId])
+  @@index([asesorId])
+}
+
+model Observacion {
+  id                       String   @id @default(cuid())
+  sesionId                 String   @unique
+  sesion                   Sesion   @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+  temasDiscutidos          String[]
+  patronesIdentificados    String[]
+  compromisosProximaSemana String[]
+  notasImportantes         String?
+  createdAt                DateTime @default(now())
+}
+
+model MoodCheckin {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mood      String
+  nota      String?
+  fecha     DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([userId, fecha])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
