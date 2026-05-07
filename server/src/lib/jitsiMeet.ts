@@ -35,49 +35,10 @@ export async function createMeetSession(params: {
   const hash = shortHash(params.estudianteEmail, params.asesorEmail, params.fechaInicio)
   const roomName = `pulso-${asesorSlug}-${estudianteSlug}-${hash}`
 
-  const fallbackUrl = `https://pulsopacto.daily.co/${roomName}`
-  const apiKey = process.env.DAILY_API_KEY
-  console.log('[Daily.co] apiKey present:', !!apiKey, '| roomName:', roomName)
-
-  if (!apiKey) {
-    console.log('[Daily.co] No API key, using fallback')
-    return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
-  }
-
-  try {
-    const response = await fetch('https://api.daily.co/v1/rooms', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        name: roomName,
-        privacy: 'public',
-        properties: {
-          exp: Math.floor(params.fechaInicio.getTime() / 1000) + params.duracionMin * 60 + 3600,
-          enable_prejoin_ui: false,
-        },
-      }),
-    })
-
-    const body = await response.text()
-    console.log('[Daily.co] status:', response.status, '| body:', body)
-
-    if (response.status === 409) {
-      return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
-    }
-
-    if (!response.ok) {
-      return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
-    }
-
-    const data = JSON.parse(body) as { url: string }
-    console.log('[Daily.co] Room created:', data.url)
-    return { linkMeet: data.url, googleCalendarEventId: null, calendarEventUrl: null }
-  } catch (err) {
-    console.error('[Daily.co] Exception:', err)
-    return { linkMeet: fallbackUrl, googleCalendarEventId: null, calendarEventUrl: null }
+  return {
+    linkMeet: `https://framatalk.org/${roomName}`,
+    googleCalendarEventId: null,
+    calendarEventUrl: null,
   }
 }
 
