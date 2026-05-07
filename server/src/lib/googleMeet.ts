@@ -51,8 +51,8 @@ export async function createGoogleMeetSession(params: {
     requestBody: {
       summary: params.titulo,
       description: params.descripcion,
-      start: { dateTime: params.fechaInicio.toISOString(), timeZone: 'America/Mexico_City' },
-      end:   { dateTime: fechaFin.toISOString(),           timeZone: 'America/Mexico_City' },
+      start: { dateTime: params.fechaInicio.toISOString(), timeZone: 'America/Bogota' },
+      end:   { dateTime: fechaFin.toISOString(),           timeZone: 'America/Bogota' },
       conferenceData: {
         createRequest: {
           requestId: `pulso-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,

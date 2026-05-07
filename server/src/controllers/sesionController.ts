@@ -2,7 +2,7 @@ import { Response } from 'express'
 import { AuthRequest } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
 import { sendSessionConfirmation, sendSessionCancellation } from '../lib/resend'
-import { createMeetSession, deleteMeetSession } from '../lib/jitsiMeet'
+import { createGoogleMeetSession, deleteGoogleCalendarEvent } from '../lib/googleMeet'
 
 export async function getSesiones(req: AuthRequest, res: Response): Promise<void> {
   const sesiones = await prisma.sesion.findMany({
@@ -81,7 +81,7 @@ export async function bookSesion(req: AuthRequest, res: Response): Promise<void>
 
   // Create Google Meet event
   const temas: string[] = temasAgenda ?? []
-  const { linkMeet, googleCalendarEventId } = await createMeetSession({
+  const { linkMeet, googleCalendarEventId } = await createGoogleMeetSession({
     titulo: `PULSO: ${student.nombre} × ${asesor.nombre}`,
     descripcion: [
       `Sesión de asesoría financiera PULSO de 20 minutos.`,
@@ -146,7 +146,7 @@ export async function cancelSesion(req: AuthRequest, res: Response): Promise<voi
 
   // Remove Google Calendar event
   if (sesion.googleCalendarEventId) {
-    deleteMeetSession(sesion.googleCalendarEventId).catch(() => {})
+    deleteGoogleCalendarEvent(sesion.googleCalendarEventId).catch(() => {})
   }
 
   const student = await prisma.user.findUnique({ where: { id: req.userId! } })
