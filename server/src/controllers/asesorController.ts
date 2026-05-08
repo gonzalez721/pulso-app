@@ -43,6 +43,8 @@ export async function asesorRegister(req: Request, res: Response): Promise<void>
     return
   }
 
+  const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true'
+
   const hashed = await bcrypt.hash(password, 10)
   const asesor = await prisma.asesor.create({
     data: {
@@ -52,21 +54,27 @@ export async function asesorRegister(req: Request, res: Response): Promise<void>
       carrera,
       semestre: Number(semestre),
       bio: bio || null,
-      emailVerified: false,
+      emailVerified: !requireVerification,
     },
     select: { id: true, email: true, nombre: true, carrera: true, semestre: true, bio: true, fotoUrl: true },
   })
 
-  // Send verification email
-  const token = await createVerificationToken(asesor.id, 'email_verify')
-  const verifyUrl = `${CLIENT_URL}/verify-email?token=${token}&role=mentor`
-  sendVerificationEmail({ to: asesor.email, nombre: asesor.nombre, verifyUrl, role: 'mentor' }).catch(console.error)
+  if (requireVerification) {
+    const token = await createVerificationToken(asesor.id, 'email_verify')
+    const verifyUrl = `${CLIENT_URL}/verify-email?token=${token}&role=mentor`
+    sendVerificationEmail({ to: asesor.email, nombre: asesor.nombre, verifyUrl, role: 'mentor' }).catch(() => {})
+    res.status(201).json({ message: 'Cuenta creada. Revisa tu correo para verificar tu cuenta.', asesor, requiresVerification: true })
+    return
+  }
 
-  res.status(201).json({
-    message: 'Cuenta creada. Revisa tu correo para verificar tu cuenta.',
-    asesor,
-    requiresVerification: true,
-  })
+  sendWelcomeEmail({ to: asesor.email, nombre: asesor.nombre, role: 'mentor' }).catch(() => {})
+
+  const payload = { userId: asesor.id, email: asesor.email, role: 'asesor' } as any
+  const accessToken  = signAccessToken(payload)
+  const refreshToken = signRefreshToken(payload)
+  await saveRefreshToken(asesor.id, refreshToken)
+
+  res.status(201).json({ asesor, accessToken, refreshToken })
 }
 
 export async function asesorLogin(req: Request, res: Response): Promise<void> {
@@ -84,7 +92,8 @@ export async function asesorLogin(req: Request, res: Response): Promise<void> {
   const valid = await bcrypt.compare(password, asesor.password)
   if (!valid) { res.status(401).json({ error: 'Credenciales incorrectas' }); return }
 
-  if (!asesor.emailVerified) {
+  const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true'
+  if (requireVerification && !asesor.emailVerified) {
     res.status(403).json({
       error: 'Debes verificar tu correo antes de ingresar. Revisa tu bandeja de entrada.',
       code: 'EMAIL_NOT_VERIFIED',

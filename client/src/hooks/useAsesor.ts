@@ -4,13 +4,18 @@ import { asesorEndpoints } from '../api/asesorClient'
 import { useAsesorStore } from '../store/asesorStore'
 
 export function useAsesorRegister() {
+  const { setAuth } = useAsesorStore()
   const navigate = useNavigate()
   return useMutation({
     mutationFn: (data: { email: string; password: string; nombre: string; carrera: string; semestre: number; bio?: string }) =>
       asesorEndpoints.register(data).then((r) => r.data),
-    onSuccess: () => {
-      // Registration requires email verification
-      navigate('/verify-email?role=mentor')
+    onSuccess: (data) => {
+      if (data.requiresVerification) {
+        navigate('/verify-email?role=mentor')
+      } else {
+        setAuth(data.asesor, data.accessToken, data.refreshToken)
+        navigate('/asesor/dashboard')
+      }
     },
   })
 }

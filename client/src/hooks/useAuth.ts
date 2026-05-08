@@ -22,14 +22,19 @@ export function useLogin(opts?: { onUnverified?: () => void }) {
 }
 
 export function useRegister() {
+  const { setAuth } = useAuthStore()
   const navigate = useNavigate()
 
   return useMutation({
     mutationFn: (data: { email: string; password: string; nombre: string; universidad?: string; semestre?: number }) =>
       authApi.register(data),
-    onSuccess: () => {
-      // Registration now requires email verification — redirect to check-email page
-      navigate('/verify-email')
+    onSuccess: ({ data }) => {
+      if (data.requiresVerification) {
+        navigate('/verify-email')
+      } else {
+        setAuth(data.user, data.accessToken, data.refreshToken)
+        navigate('/onboarding')
+      }
     },
   })
 }

@@ -13,7 +13,7 @@ import type {
 // Auth
 export const authApi = {
   register: (data: { email: string; password: string; nombre: string; universidad?: string; semestre?: number }) =>
-    api.post<{ user: User; accessToken: string; refreshToken: string }>('/auth/register', data),
+    api.post<{ user: User; accessToken: string; refreshToken: string; requiresVerification?: boolean }>('/auth/register', data),
 
   login: (data: { email: string; password: string }) =>
     api.post<{ user: User; accessToken: string; refreshToken: string }>('/auth/login', data),
