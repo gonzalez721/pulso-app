@@ -1,5 +1,13 @@
 import 'dotenv/config'
+import { execSync } from 'child_process'
 import express from 'express'
+
+// Run pending migrations on startup
+try {
+  execSync('npx prisma migrate deploy', { stdio: 'inherit' })
+} catch (e) {
+  console.error('[prisma] migrate deploy failed:', e)
+}
 import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'

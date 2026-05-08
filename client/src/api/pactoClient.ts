@@ -1,27 +1,20 @@
 import axios from 'axios'
-import { useAuthStore } from '../store/authStore'
+import api from './client'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
 
-const pactoApi = axios.create({
-  baseURL: `${BASE_URL}/api/pacto`,
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 10000,
-})
-
-pactoApi.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken
-  if (token && config.headers) config.headers.Authorization = `Bearer ${token}`
-  return config
-})
-
 export const pactoEndpoints = {
+  // Rutas protegidas — usan el api principal (con refresh de token)
   setup: (modo: 'humano' | 'ia') =>
-    pactoApi.post<{ pacto: any; inviteUrl: string | null }>('/setup', { modo }),
+    api.post<{ pacto: any; inviteUrl: string | null }>('/pacto/setup', { modo }),
 
   getStatus: () =>
-    pactoApi.get<{ activo: boolean; estado?: string; modo?: string; partnerNombre?: string; inviteUrl?: string | null }>('/status'),
+    api.get<{ activo: boolean; estado?: string; modo?: string; partnerNombre?: string; inviteUrl?: string | null }>('/pacto/status'),
 
+  getHistorial: () =>
+    api.get<any[]>('/pacto/alertas'),
+
+  // Rutas públicas — sin auth (partner flows)
   getInviteInfo: (token: string) =>
     axios.get<{ userName: string; inviteToken: string; vapidPublicKey: string }>(
       `${BASE_URL}/api/pacto/invitacion/${token}`
@@ -43,9 +36,6 @@ export const pactoEndpoints = {
 
   responderAlerta: (alertaId: string, mensaje: string) =>
     axios.post(`${BASE_URL}/api/pacto/alerta/${alertaId}/responder`, { mensaje }),
-
-  getHistorial: () =>
-    pactoApi.get<any[]>('/alertas'),
 }
 
 // ── Web Push helpers ──────────────────────────────────────────────────────────
