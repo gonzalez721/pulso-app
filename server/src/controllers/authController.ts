@@ -58,9 +58,6 @@ export async function register(req: Request, res: Response): Promise<void> {
     return
   }
 
-  // Email verification is optional until a verified sending domain is configured
-  const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true'
-
   const hashed = await bcrypt.hash(password, 10)
   const user = await prisma.user.create({
     data: {
@@ -69,28 +66,13 @@ export async function register(req: Request, res: Response): Promise<void> {
       nombre,
       universidad,
       semestre: semestre ? Number(semestre) : undefined,
-      emailVerified: !requireVerification,
+      emailVerified: true,
     },
     select: { id: true, email: true, nombre: true, onboardingComplete: true, emailVerified: true },
   })
 
-  // Try to send welcome / verification email (non-blocking, fails silently if domain not configured)
-  if (requireVerification) {
-    const token = await createVerificationToken(user.id, 'email_verify')
-    const verifyUrl = `${CLIENT_URL}/verify-email?token=${token}`
-    sendVerificationEmail({ to: user.email, nombre: user.nombre, verifyUrl, role: 'student' }).catch((e) => console.error('[Resend] verify student:', e.message))
-  } else {
-    sendWelcomeEmail({ to: user.email, nombre: user.nombre, role: 'student' }).catch((e) => console.error('[Resend] welcome student:', e.message))
-  }
-
-  if (requireVerification) {
-    res.status(201).json({
-      message: 'Cuenta creada. Revisa tu correo para verificar tu cuenta.',
-      user,
-      requiresVerification: true,
-    })
-    return
-  }
+  // Send welcome email (non-blocking)
+  sendWelcomeEmail({ to: user.email, nombre: user.nombre, role: 'student' }).catch((e) => console.error('[Resend] welcome student:', e.message))
 
   // Auto-login: issue tokens immediately
   const accessToken  = signAccessToken({ userId: user.id, email: user.email })
@@ -122,15 +104,6 @@ export async function login(req: Request, res: Response): Promise<void> {
     return
   }
 
-  const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true'
-  if (requireVerification && !user.emailVerified) {
-    res.status(403).json({
-      error: 'Debes verificar tu correo antes de ingresar. Revisa tu bandeja de entrada.',
-      code: 'EMAIL_NOT_VERIFIED',
-      email: user.email,
-    })
-    return
-  }
 
   const accessToken = signAccessToken({ userId: user.id, email: user.email })
   const refreshToken = signRefreshToken({ userId: user.id, email: user.email })
