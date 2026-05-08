@@ -60,6 +60,20 @@ app.use(express.urlencoded({ extended: true }))
 // Health check
 app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
 
+// DB diagnostic — check if PACTO tables exist
+app.get('/health/db', async (_req, res) => {
+  try {
+    const { prisma } = await import('./lib/prisma')
+    const [pactoCount, alertaCount] = await Promise.all([
+      prisma.$queryRaw`SELECT COUNT(*) FROM "PactoRelacion"`,
+      prisma.$queryRaw`SELECT COUNT(*) FROM "PactoAlerta"`,
+    ])
+    res.json({ tablas: { PactoRelacion: true, PactoAlerta: true }, pactoCount, alertaCount })
+  } catch (e: any) {
+    res.status(500).json({ tablas: { error: e.message } })
+  }
+})
+
 // Email diagnostic — call GET /health/email?to=you@example.com to test Resend
 app.get('/health/email', async (req, res) => {
   const to = (req.query.to as string) ?? process.env.TEST_EMAIL
