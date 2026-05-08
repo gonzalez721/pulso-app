@@ -10,12 +10,9 @@ export function useAsesorRegister() {
     mutationFn: (data: { email: string; password: string; nombre: string; carrera: string; semestre: number; bio?: string }) =>
       asesorEndpoints.register(data).then((r) => r.data),
     onSuccess: (data) => {
-      if (data.requiresVerification) {
-        navigate('/verify-email?role=mentor')
-      } else {
-        setAuth(data.asesor, data.accessToken, data.refreshToken)
-        navigate('/asesor/dashboard')
-      }
+      // Always log in immediately — verification email is sent but not required
+      setAuth(data.asesor, data.accessToken, data.refreshToken)
+      navigate('/asesor/dashboard')
     },
   })
 }

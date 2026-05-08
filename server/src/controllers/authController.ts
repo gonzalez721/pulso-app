@@ -66,13 +66,15 @@ export async function register(req: Request, res: Response): Promise<void> {
       nombre,
       universidad,
       semestre: semestre ? Number(semestre) : undefined,
-      emailVerified: true,
+      emailVerified: false,
     },
     select: { id: true, email: true, nombre: true, onboardingComplete: true, emailVerified: true },
   })
 
-  // Send welcome email (non-blocking)
-  sendWelcomeEmail({ to: user.email, nombre: user.nombre, role: 'student' }).catch((e) => console.error('[Resend] welcome student:', e.message))
+  // Send verification email (non-blocking — does not block login)
+  const token = await createVerificationToken(user.id, 'email_verify')
+  const verifyUrl = `${CLIENT_URL}/verify-email?token=${token}`
+  sendVerificationEmail({ to: user.email, nombre: user.nombre, verifyUrl, role: 'student' }).catch((e) => console.error('[Resend] verify student:', e.message))
 
   // Auto-login: issue tokens immediately
   const accessToken  = signAccessToken({ userId: user.id, email: user.email })

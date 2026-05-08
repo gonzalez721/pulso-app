@@ -7,6 +7,7 @@ export interface User {
   mensualidadMensual?: number
   appsPago: string[]
   onboardingComplete: boolean
+  emailVerified?: boolean
   createdAt: string
   perfil?: PerfilFinanciero
 }

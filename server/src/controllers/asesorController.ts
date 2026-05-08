@@ -52,12 +52,15 @@ export async function asesorRegister(req: Request, res: Response): Promise<void>
       carrera,
       semestre: Number(semestre),
       bio: bio || null,
-      emailVerified: true,
+      emailVerified: false,
     },
     select: { id: true, email: true, nombre: true, carrera: true, semestre: true, bio: true, fotoUrl: true },
   })
 
-  sendWelcomeEmail({ to: asesor.email, nombre: asesor.nombre, role: 'mentor' }).catch((e) => console.error('[Resend] welcome mentor:', e.message))
+  // Send verification email (non-blocking — does not block login)
+  const token = await createVerificationToken(asesor.id, 'email_verify')
+  const verifyUrl = `${CLIENT_URL}/verify-email?token=${token}&role=mentor`
+  sendVerificationEmail({ to: asesor.email, nombre: asesor.nombre, verifyUrl, role: 'mentor' }).catch((e) => console.error('[Resend] verify mentor:', e.message))
 
   const payload = { userId: asesor.id, email: asesor.email, role: 'asesor' } as any
   const accessToken  = signAccessToken(payload)

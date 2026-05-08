@@ -29,12 +29,9 @@ export function useRegister() {
     mutationFn: (data: { email: string; password: string; nombre: string; universidad?: string; semestre?: number }) =>
       authApi.register(data),
     onSuccess: ({ data }) => {
-      if (data.requiresVerification) {
-        navigate('/verify-email')
-      } else {
-        setAuth(data.user, data.accessToken, data.refreshToken)
-        navigate('/onboarding')
-      }
+      // Always log in immediately — verification email is sent but not required
+      setAuth(data.user, data.accessToken, data.refreshToken)
+      navigate('/onboarding')
     },
   })
 }
