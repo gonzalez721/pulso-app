@@ -4,14 +4,14 @@
 
 @layer base {
   :root {
-    --primary-dark: #2D1B4E;
-    --primary-light: #F5E6E8;
-    --accent-peach: #FFD4C8;
-    --accent-coral: #FF9B9B;
-    --text-dark: #1A1A1A;
-    --text-muted: #6B6B6B;
-    --bg-white: #FFFFFF;
-    --border-light: #E5E5E5;
+    --primary-dark: #7C4DFF;
+    --primary-light: #1A1A2E;
+    --neon-green: #A8FF3E;
+    --surface: #12121E;
+    --surface-raised: #1A1A2E;
+    --text-dark: #FFFFFF;
+    --text-muted: #8B8BA7;
+    --border-light: #2A2A40;
   }
 
   * {
@@ -25,15 +25,16 @@
   }
 
   body {
-    @apply text-text-dark bg-gray-50;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #0A0A12;
+    color: #FFFFFF;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
     overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Space Grotesk', 'DM Sans', sans-serif;
   }
 }
 

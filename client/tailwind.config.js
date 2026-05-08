@@ -5,25 +5,36 @@ export default {
     extend: {
       colors: {
         primary: {
-          dark: '#2D1B4E',
-          light: '#F5E6E8',
-          DEFAULT: '#2D1B4E',
+          dark: '#7C4DFF',
+          light: '#1A1A2E',
+          DEFAULT: '#7C4DFF',
+        },
+        neon: {
+          green: '#A8FF3E',
+          purple: '#7C4DFF',
+        },
+        surface: {
+          DEFAULT: '#12121E',
+          raised: '#1A1A2E',
+          elevated: '#222238',
         },
         accent: {
           peach: '#FFD4C8',
           coral: '#FF9B9B',
+          green: '#A8FF3E',
         },
         text: {
-          dark: '#1A1A1A',
-          muted: '#6B6B6B',
+          dark: '#FFFFFF',
+          muted: '#8B8BA7',
+          dim: '#5A5A7A',
         },
         border: {
-          light: '#E5E5E5',
+          light: '#2A2A40',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+        sans: ['DM Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Space Grotesk', 'DM Sans', 'sans-serif'],
       },
       borderRadius: {
         '2xl': '1rem',
@@ -31,9 +42,11 @@ export default {
         '4xl': '2rem',
       },
       boxShadow: {
-        soft: '0 2px 16px 0 rgba(45, 27, 78, 0.08)',
-        card: '0 4px 24px 0 rgba(45, 27, 78, 0.10)',
-        float: '0 8px 40px 0 rgba(45, 27, 78, 0.16)',
+        soft: '0 2px 16px 0 rgba(124, 77, 255, 0.15)',
+        card: '0 4px 24px 0 rgba(0, 0, 0, 0.5)',
+        float: '0 8px 40px 0 rgba(124, 77, 255, 0.35)',
+        neon: '0 0 20px rgba(168, 255, 62, 0.4)',
+        glow: '0 0 30px rgba(124, 77, 255, 0.4)',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',

@@ -9,7 +9,7 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ animate = false, padding = 'md', className = '', children, ...props }, ref) => {
     const paddings = { none: '', sm: 'p-4', md: 'p-5', lg: 'p-6' }
-    const base = `bg-white rounded-3xl shadow-card ${paddings[padding]} ${className}`
+    const base = `bg-surface-raised border border-border-light rounded-3xl shadow-card ${paddings[padding]} ${className}`
 
     if (animate) {
       return (

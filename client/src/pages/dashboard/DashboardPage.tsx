@@ -31,7 +31,10 @@ export function DashboardPage() {
   const firstName = user?.nombre.split(' ')[0] ?? ''
 
   return (
-    <div className="px-5 pt-14 pb-6 space-y-5">
+    <div className="px-5 pt-14 pb-32 space-y-5 relative">
+      {/* Background glow */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-80 h-80 bg-primary-dark/10 rounded-full blur-3xl pointer-events-none" />
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -40,68 +43,69 @@ export function DashboardPage() {
       >
         <div>
           <p className="text-text-muted text-sm font-medium">{greeting} 👋</p>
-          <h1 className="text-2xl font-extrabold font-display text-primary-dark">{firstName}</h1>
+          <h1 className="text-2xl font-bold font-display text-white">{firstName}</h1>
         </div>
         <button
           onClick={() => navigate('/weekly')}
-          className="w-10 h-10 rounded-2xl bg-primary-light flex items-center justify-center hover:bg-accent-peach transition-colors"
+          className="w-10 h-10 rounded-2xl bg-surface-raised border border-border-light flex items-center justify-center hover:border-neon-green/50 transition-colors"
         >
-          <Zap size={18} className="text-primary-dark" />
+          <Zap size={18} className="text-neon-green" />
         </button>
       </motion.div>
 
       {/* Budget Card */}
-      <Card animate className="bg-primary-dark text-white">
-        <div className="flex items-center gap-5">
-          <ProgressCircle
-            value={gastado}
-            max={presupuesto}
-            size={120}
-            strokeWidth={10}
-            label={`${pct}%`}
-            sublabel="gastado"
-          />
-          <div className="flex-1 space-y-2">
-            <div>
-              <p className="text-white/60 text-xs font-medium uppercase tracking-wide">Gastado esta semana</p>
-              <p className="text-3xl font-extrabold font-display">
-                {summaryLoading ? '—' : formatCurrency(gastado)}
-              </p>
-            </div>
-            <div className="h-px bg-white/20" />
-            <div>
-              <p className="text-white/60 text-xs font-medium">Disponible</p>
-              <p className="text-lg font-bold text-accent-peach">{formatCurrency(remaining)}</p>
-            </div>
-            <div className="text-xs text-white/50 font-medium">
-              de {formatCurrency(presupuesto)} semanales
-            </div>
-          </div>
-        </div>
-
-        {/* Category mini-bars */}
-        {summary && summary.categoryBreakdown.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-white/20 space-y-2">
-            {summary.categoryBreakdown.slice(0, 4).map((c) => (
-              <div key={c.categoria} className="flex items-center gap-2">
-                <span className="text-xs text-white/60 w-24 truncate">{c.categoria}</span>
-                <div className="flex-1 h-1.5 rounded-full bg-white/20">
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${c.porcentaje}%`,
-                      backgroundColor: CATEGORY_COLORS[c.categoria] ?? '#FFD4C8',
-                    }}
-                  />
-                </div>
-                <span className="text-xs text-white/70 w-14 text-right font-semibold">
-                  {formatCurrency(c.monto)}
-                </span>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-3xl overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #1A1A2E 0%, #2A1A4E 100%)', border: '1px solid rgba(124,77,255,0.3)' }}
+      >
+        <div className="p-5">
+          <div className="flex items-center gap-5">
+            <ProgressCircle
+              value={gastado}
+              max={presupuesto}
+              size={110}
+              strokeWidth={8}
+              label={`${pct}%`}
+              sublabel="gastado"
+            />
+            <div className="flex-1 space-y-2">
+              <div>
+                <p className="text-text-muted text-xs font-medium uppercase tracking-wide">Gastado esta semana</p>
+                <p className="text-3xl font-bold font-display text-white">
+                  {summaryLoading ? '—' : formatCurrency(gastado)}
+                </p>
               </div>
-            ))}
+              <div className="h-px bg-white/10" />
+              <div>
+                <p className="text-text-muted text-xs">Disponible</p>
+                <p className="text-lg font-bold text-neon-green">{formatCurrency(remaining)}</p>
+              </div>
+              <p className="text-xs text-text-dim">de {formatCurrency(presupuesto)} semanales</p>
+            </div>
           </div>
-        )}
-      </Card>
+
+          {summary && summary.categoryBreakdown.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
+              {summary.categoryBreakdown.slice(0, 4).map((c) => (
+                <div key={c.categoria} className="flex items-center gap-2">
+                  <span className="text-xs text-text-muted w-24 truncate">{c.categoria}</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${c.porcentaje}%`, backgroundColor: CATEGORY_COLORS[c.categoria] ?? '#A8FF3E' }}
+                    />
+                  </div>
+                  <span className="text-xs text-text-muted w-14 text-right font-semibold">
+                    {formatCurrency(c.monto)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
 
       {/* Quick categories */}
       {summary && summary.categoryBreakdown.length > 0 && (
@@ -116,11 +120,11 @@ export function DashboardPage() {
 
       {/* Recent transactions */}
       <Card animate>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="font-bold text-primary-dark font-display">Recientes</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-white font-display">Recientes</h2>
           <button
             onClick={() => navigate('/weekly')}
-            className="text-xs text-text-muted font-semibold hover:text-primary-dark"
+            className="text-xs text-neon-green font-semibold hover:brightness-110"
           >
             Ver todo →
           </button>
@@ -143,7 +147,7 @@ export function DashboardPage() {
       <motion.button
         whileTap={{ scale: 0.93 }}
         onClick={() => setShowAddTransaction(true)}
-        className="fixed bottom-24 right-5 w-14 h-14 rounded-2xl bg-primary-dark text-white shadow-float flex items-center justify-center z-20"
+        className="fixed bottom-28 right-5 w-14 h-14 rounded-2xl bg-neon-green text-[#0A0A12] shadow-neon flex items-center justify-center z-20 font-bold"
       >
         <Plus size={26} strokeWidth={2.5} />
       </motion.button>

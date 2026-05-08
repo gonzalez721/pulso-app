@@ -58,6 +58,10 @@ export function BookSessionModal({ open, onClose }: Props) {
           setMeetLink(sesion.linkMeet ?? '')
           setStep('success')
         },
+        onError: (err: any) => {
+          const msg = err?.response?.data?.error ?? err?.message ?? 'Error desconocido'
+          alert('Error al reservar: ' + msg)
+        },
       }
     )
   }

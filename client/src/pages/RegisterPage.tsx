@@ -18,17 +18,18 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-primary-light flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-[#0A0A12] flex flex-col items-center justify-center px-6 relative overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm space-y-8"
       >
         <div className="text-center">
-          <div className="w-16 h-16 rounded-[1.5rem] bg-primary-dark flex items-center justify-center mx-auto mb-4 shadow-float">
-            <span className="text-3xl">💸</span>
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-dark/15 rounded-full blur-3xl pointer-events-none -z-10" />
+          <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-primary-dark to-purple-900 flex items-center justify-center mx-auto mb-4 shadow-glow">
+            <span className="text-3xl">⚡</span>
           </div>
-          <h1 className="text-3xl font-extrabold font-display text-primary-dark">Crear cuenta</h1>
+          <h1 className="text-4xl font-bold font-display text-white tracking-tight">Crear cuenta</h1>
           <p className="text-text-muted mt-1">Empieza a controlar tus finanzas</p>
         </div>
 

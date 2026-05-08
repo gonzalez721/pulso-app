@@ -12,7 +12,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1.5">
         {label && (
-          <label className="text-sm font-semibold text-text-dark">{label}</label>
+          <label className="text-sm font-semibold text-text-muted">{label}</label>
         )}
         <div className="relative flex items-center">
           {prefix && (
@@ -21,13 +21,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             className={`
-              w-full h-12 rounded-2xl border border-border-light bg-white px-4 text-text-dark
-              placeholder:text-text-muted/60 font-medium
-              focus:outline-none focus:ring-2 focus:ring-primary-dark/20 focus:border-primary-dark
-              disabled:opacity-50 disabled:bg-gray-50 transition-all
+              w-full h-12 rounded-2xl border border-border-light bg-surface-elevated px-4 text-white
+              placeholder:text-text-dim font-medium
+              focus:outline-none focus:ring-2 focus:ring-primary-dark/40 focus:border-primary-dark
+              disabled:opacity-50 transition-all
               ${prefix ? 'pl-10' : ''}
               ${suffix ? 'pr-10' : ''}
-              ${error ? 'border-red-400 focus:ring-red-200' : ''}
+              ${error ? 'border-red-500 focus:ring-red-500/30' : ''}
               ${className}
             `}
             {...props}
@@ -36,7 +36,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <span className="absolute right-4 text-text-muted pointer-events-none">{suffix}</span>
           )}
         </div>
-        {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+        {error && <p className="text-xs text-red-400 font-medium">{error}</p>}
       </div>
     )
   }

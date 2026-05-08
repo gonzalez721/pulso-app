@@ -37,7 +37,7 @@ export function Modal({ open, onClose, title, children, fullScreen }: ModalProps
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className={`fixed bottom-0 left-0 right-0 z-50 bg-white ${
+            className={`fixed bottom-0 left-0 right-0 z-50 bg-surface-DEFAULT border-t border-border-light ${
               fullScreen ? 'top-0 rounded-none' : 'rounded-t-3xl max-h-[92vh]'
             } overflow-hidden flex flex-col`}
           >
@@ -50,12 +50,12 @@ export function Modal({ open, onClose, title, children, fullScreen }: ModalProps
             {/* Header */}
             {title && (
               <div className="flex items-center justify-between px-5 py-4 border-b border-border-light">
-                <h2 className="text-lg font-bold font-display text-primary-dark">{title}</h2>
+                <h2 className="text-lg font-bold font-display text-white">{title}</h2>
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center hover:bg-accent-peach transition-colors"
+                  className="w-8 h-8 rounded-full bg-surface-elevated flex items-center justify-center hover:bg-border-light transition-colors"
                 >
-                  <X size={16} className="text-primary-dark" />
+                  <X size={16} className="text-text-muted" />
                 </button>
               </div>
             )}

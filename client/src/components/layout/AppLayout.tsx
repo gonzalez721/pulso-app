@@ -7,7 +7,7 @@ export function AppLayout() {
   const { showAddTransaction, setShowAddTransaction } = useUIStore()
 
   return (
-    <div className="min-h-screen bg-gray-50 max-w-lg mx-auto relative">
+    <div className="min-h-screen bg-[#0A0A12] max-w-lg mx-auto relative">
       <main className="pb-24">
         <Outlet />
       </main>

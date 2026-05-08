@@ -16,18 +16,22 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-primary-light flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-[#0A0A12] flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-dark/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-64 h-64 bg-neon-green/5 rounded-full blur-3xl pointer-events-none" />
+
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm space-y-8"
+        className="w-full max-w-sm space-y-8 relative z-10"
       >
         <div className="text-center">
-          <div className="w-16 h-16 rounded-[1.5rem] bg-primary-dark flex items-center justify-center mx-auto mb-4 shadow-float">
-            <span className="text-3xl">💸</span>
+          <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-primary-dark to-purple-900 flex items-center justify-center mx-auto mb-4 shadow-glow">
+            <span className="text-3xl">⚡</span>
           </div>
-          <h1 className="text-3xl font-extrabold font-display text-primary-dark">PULSO</h1>
-          <p className="text-text-muted mt-1">Inicia sesión en tu cuenta</p>
+          <h1 className="text-4xl font-bold font-display text-white tracking-tight">PULSO</h1>
+          <p className="text-text-muted mt-1 font-sans">Tu finanzas, a tu ritmo</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -51,7 +55,7 @@ export function LoginPage() {
           />
 
           {error && (
-            <p className="text-sm text-red-500 font-medium text-center">
+            <p className="text-sm text-red-400 font-medium text-center">
               Credenciales incorrectas. Intenta de nuevo.
             </p>
           )}
@@ -63,12 +67,12 @@ export function LoginPage() {
 
         <p className="text-center text-sm text-text-muted">
           ¿No tienes cuenta?{' '}
-          <Link to="/register" className="font-bold text-primary-dark hover:underline">
+          <Link to="/register" className="font-bold text-neon-green hover:brightness-110">
             Regístrate gratis
           </Link>
         </p>
 
-        <div className="bg-white/60 rounded-2xl p-3 text-center">
+        <div className="bg-surface-raised border border-border-light rounded-2xl p-3 text-center">
           <p className="text-xs text-text-muted font-medium">Demo: demo@pulso.app / demo1234</p>
         </div>
       </motion.div>
