@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import axios from 'axios'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { useLogin } from '../hooks/useAuth'
@@ -71,7 +72,6 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={async () => {
-                  const { default: axios } = await import('axios')
                   const BASE = import.meta.env.VITE_API_URL ?? 'https://pulso-server.onrender.com'
                   await axios.post(`${BASE}/api/auth/resend-verification`, { email }).catch(() => {})
                   navigate('/verify-email')

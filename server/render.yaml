@@ -11,3 +11,7 @@ services:
         value: production
       - key: PORT
         value: 3001
+      - key: FRONTEND_URL
+        value: https://client-silk-one.vercel.app
+      - key: RESEND_API_KEY
+        value: re_VXBe7fzH_Cg9jAtTY72vEt617TKzexJsa
