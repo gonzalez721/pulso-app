@@ -1,7 +1,7 @@
 import { Response } from 'express'
 import { AuthRequest } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
-import { sendSessionConfirmation, sendSessionCancellation } from '../lib/resend'
+import { sendSessionConfirmation, sendSessionNotificationAsesor, sendSessionCancellation, sendSessionCancellationAsesor } from '../lib/resend'
 import { createGoogleMeetSession, deleteGoogleCalendarEvent } from '../lib/googleMeet'
 
 export async function getSesiones(req: AuthRequest, res: Response): Promise<void> {
@@ -110,11 +110,22 @@ export async function bookSesion(req: AuthRequest, res: Response): Promise<void>
     include: { asesor: true },
   })
 
-  // Confirmation email (non-blocking)
+  // Confirmation email to student (non-blocking)
   sendSessionConfirmation({
     to: student.email,
     userName: student.nombre,
     asesorName: asesor.nombre,
+    fechaHora: fecha,
+    linkMeet: linkMeet,
+    temas,
+  }).catch(() => {})
+
+  // Notification email to asesor (non-blocking)
+  sendSessionNotificationAsesor({
+    to: asesor.email,
+    asesorName: asesor.nombre,
+    studentName: student.nombre,
+    studentEmail: student.email,
     fechaHora: fecha,
     linkMeet: linkMeet,
     temas,
@@ -155,6 +166,13 @@ export async function cancelSesion(req: AuthRequest, res: Response): Promise<voi
       to: student.email,
       userName: student.nombre,
       asesorName: sesion.asesor.nombre,
+      fechaHora: sesion.fechaHora,
+    }).catch(() => {})
+
+    sendSessionCancellationAsesor({
+      to: sesion.asesor.email,
+      asesorName: sesion.asesor.nombre,
+      studentName: student.nombre,
       fechaHora: sesion.fechaHora,
     }).catch(() => {})
   }

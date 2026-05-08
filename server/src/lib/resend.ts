@@ -181,6 +181,46 @@ export async function sendSessionConfirmation(params: {
   })
 }
 
+// ─── Session notification for asesor ─────────────────────────────────────────
+
+export async function sendSessionNotificationAsesor(params: {
+  to: string
+  asesorName: string
+  studentName: string
+  studentEmail: string
+  fechaHora: Date
+  linkMeet?: string
+  temas: string[]
+}): Promise<void> {
+  const fecha = params.fechaHora.toLocaleDateString('es-CO', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  })
+  const hora = params.fechaHora.toLocaleTimeString('es-CO', {
+    hour: '2-digit', minute: '2-digit',
+  })
+  await getResend().emails.send({
+    from: FROM,
+    to: params.to,
+    subject: `📅 Nueva sesión agendada — ${params.studentName}`,
+    html: baseHtml(`
+      <h2>Nueva sesión agendada 📅</h2>
+      <p>Hola <strong style="color:#fff;">${params.asesorName}</strong>,<br>
+      un estudiante ha agendado una sesión contigo en PULSO.</p>
+      <div class="info-box">
+        <div class="info-row"><span class="info-label">Estudiante</span><span>${params.studentName}</span></div>
+        <div class="info-row"><span class="info-label">Correo</span><span style="color:#A8FF3E;">${params.studentEmail}</span></div>
+        <div class="info-row"><span class="info-label">Fecha</span><span>${fecha}</span></div>
+        <div class="info-row"><span class="info-label">Hora</span><span>${hora}</span></div>
+        <div class="info-row"><span class="info-label">Duración</span><span>20 minutos</span></div>
+        ${params.linkMeet ? `<div class="info-row"><span class="info-label">Link</span><a href="${params.linkMeet}" style="color:#A8FF3E;">${params.linkMeet}</a></div>` : ''}
+        ${params.temas.length > 0 ? `<div class="info-row"><span class="info-label">Temas</span><span>${params.temas.join(', ')}</span></div>` : ''}
+      </div>
+      ${params.linkMeet ? `<a href="${params.linkMeet}" class="btn">Entrar a la reunión →</a>` : ''}
+      <p style="font-size:13px;">💡 Revisa el perfil del estudiante en tu portal antes de la sesión.</p>
+    `),
+  })
+}
+
 // ─── Session cancellation ────────────────────────────────────────────────────
 
 export async function sendSessionCancellation(params: {
@@ -202,6 +242,31 @@ export async function sendSessionCancellation(params: {
       tu sesión con <strong style="color:#fff;">${params.asesorName}</strong> programada para el <strong style="color:#fff;">${fecha}</strong> ha sido cancelada.</p>
       <p>Puedes agendar una nueva sesión en cualquier momento desde la app.</p>
       <a href="https://pulsopacto.online/sessions" class="btn">Agendar nueva sesión →</a>
+    `),
+  })
+}
+
+// ─── Session cancellation for asesor ─────────────────────────────────────────
+
+export async function sendSessionCancellationAsesor(params: {
+  to: string
+  asesorName: string
+  studentName: string
+  fechaHora: Date
+}): Promise<void> {
+  const fecha = params.fechaHora.toLocaleDateString('es-CO', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  })
+  await getResend().emails.send({
+    from: FROM,
+    to: params.to,
+    subject: `Sesión cancelada — ${params.studentName}`,
+    html: baseHtml(`
+      <h2>Sesión cancelada</h2>
+      <p>Hola <strong style="color:#fff;">${params.asesorName}</strong>,<br>
+      el estudiante <strong style="color:#fff;">${params.studentName}</strong> canceló la sesión programada para el <strong style="color:#fff;">${fecha}</strong>.</p>
+      <p>El horario vuelve a estar disponible para nuevas reservas.</p>
+      <a href="https://pulsopacto.online/asesor/sesiones" class="btn">Ver mis sesiones →</a>
     `),
   })
 }
