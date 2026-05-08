@@ -22,11 +22,23 @@ const PORT = process.env.PORT ?? 3001
 app.use(helmet())
 app.use(
   cors({
-    origin: [
-      process.env.FRONTEND_URL ?? 'http://localhost:5173',
-      'https://pulso-app-gonzalez.vercel.app',
-      'http://localhost:5173',
-    ],
+    origin: (origin, callback) => {
+      const allowed = [
+        'http://localhost:5173',
+        'http://localhost:4173',
+        process.env.FRONTEND_URL ?? '',
+        'https://client-silk-one.vercel.app',
+        'https://pulso-app-gonzalez.vercel.app',
+      ].filter(Boolean)
+
+      // Allow requests with no origin (curl, Render health checks, etc.)
+      if (!origin || allowed.includes(origin)) {
+        callback(null, true)
+      } else {
+        console.warn(`CORS blocked: ${origin}`)
+        callback(new Error(`CORS: origin not allowed — ${origin}`))
+      }
+    },
     credentials: true,
   })
 )
