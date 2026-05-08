@@ -14,7 +14,7 @@ export function AmountInput({
   onChange,
   label,
   placeholder = '0',
-  currency = 'MXN',
+  currency = 'COP',
 }: AmountInputProps) {
   const [focused, setFocused] = useState(false)
   const [raw, setRaw] = useState(value > 0 ? String(value) : '')

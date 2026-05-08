@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Button } from '../../../components/ui/Button'
 import { AmountInput } from '../../../components/ui/AmountInput'
 
-const PRESETS = [400, 600, 800, 1000, 1500]
+const PRESETS = [50000, 100000, 150000, 200000, 300000]
 
 export function BudgetStep({ onNext }: { onNext: (budget: number) => void }) {
   const [budget, setBudget] = useState(0)
@@ -52,7 +52,7 @@ export function BudgetStep({ onNext }: { onNext: (budget: number) => void }) {
           style={{ borderColor: 'rgba(168,255,62,0.2)', background: 'rgba(168,255,62,0.05)' }}
         >
           <p className="text-sm text-text-muted font-medium">
-            💡 El promedio de un estudiante universitario gasta entre $600–$900 por semana.
+            💡 El promedio de un estudiante universitario gasta entre $80.000–$150.000 por semana.
           </p>
         </div>
       </motion.div>

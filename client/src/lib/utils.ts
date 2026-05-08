@@ -9,23 +9,23 @@ export function cn(...inputs: ClassValue[]): string {
     .trim()
 }
 
-export function formatCurrency(amount: number, currency = 'MXN'): string {
-  return new Intl.NumberFormat('es-MX', {
+export function formatCurrency(amount: number, currency = 'COP'): string {
+  return new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency,
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   }).format(amount)
 }
 
 export function formatDate(date: string | Date, opts?: Intl.DateTimeFormatOptions): string {
   const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleDateString('es-MX', opts ?? { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString('es-CO', opts ?? { day: 'numeric', month: 'short' })
 }
 
 export function formatTime(date: string | Date): string {
   const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
 }
 
 export function getWeekStart(date = new Date()): Date {
