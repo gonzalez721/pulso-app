@@ -6,7 +6,8 @@ import {
   AlertCircle, ChevronDown, ChevronUp, BookOpen,
   Target, Brain, Calendar, FileText, User,
 } from 'lucide-react'
-import { useEstudianteHistoria, useSaveObservacion } from '../../hooks/useAsesor'
+import { useEstudianteHistoria } from '../../hooks/useAsesor'
+import { useAsesorStore } from '../../store/asesorStore'
 import { formatDate, formatTime, getInitials } from '../../lib/utils'
 
 const OBJETIVO_LABEL: Record<string, string> = {
@@ -29,6 +30,7 @@ export function AsesorEstudianteHistoria() {
   const [order, setOrder] = useState<'asc' | 'desc'>('desc')
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
+  const { asesor: currentAsesor } = useAsesorStore()
   const { data, isLoading } = useEstudianteHistoria(userId ?? null)
 
   if (isLoading) {
@@ -224,6 +226,8 @@ export function AsesorEstudianteHistoria() {
                   const isOpen  = expandedId === sesion.id
                   const isFirst = idx === 0
 
+                  const isMine = sesion.asesor?.id === currentAsesor?.id
+
                   return (
                     <motion.div
                       key={sesion.id}
@@ -246,7 +250,7 @@ export function AsesorEstudianteHistoria() {
                           className="w-full px-5 py-4 flex items-center gap-3 text-left hover:bg-surface-elevated/50 transition-colors"
                         >
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${style.bg} ${style.text}`}>
                                 {style.label}
                               </span>
@@ -267,6 +271,16 @@ export function AsesorEstudianteHistoria() {
                             <p className="text-xs text-text-muted mt-0.5">
                               {formatTime(sesion.fechaHora)} · {sesion.duracionMin} min
                             </p>
+                            {/* Asesor who handled this session */}
+                            {sesion.asesor && (
+                              <p className="text-[11px] mt-1 flex items-center gap-1">
+                                <User size={9} className={isMine ? 'text-neon-green' : 'text-text-dim'} />
+                                <span className={isMine ? 'text-neon-green font-semibold' : 'text-text-dim'}>
+                                  {isMine ? 'Tú' : sesion.asesor.nombre}
+                                  {sesion.asesor.carrera && !isMine && ` · ${sesion.asesor.carrera}`}
+                                </span>
+                              </p>
+                            )}
                             {sesion.temasAgenda?.length > 0 && (
                               <p className="text-[11px] text-text-dim mt-1 truncate">
                                 Agenda: {sesion.temasAgenda.join(' · ')}
@@ -274,13 +288,15 @@ export function AsesorEstudianteHistoria() {
                             )}
                           </div>
                           <div className="flex items-center gap-1">
-                            <Link
-                              to={`/asesor/sesion/${sesion.id}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-[11px] font-bold text-primary-dark/70 hover:text-primary-dark transition-colors px-2 py-1 rounded-lg hover:bg-primary-dark/10"
-                            >
-                              Abrir
-                            </Link>
+                            {isMine && (
+                              <Link
+                                to={`/asesor/sesion/${sesion.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-[11px] font-bold text-primary-dark/70 hover:text-primary-dark transition-colors px-2 py-1 rounded-lg hover:bg-primary-dark/10"
+                              >
+                                Abrir
+                              </Link>
+                            )}
                             {obs || sesion.estado !== 'cancelada' ? (
                               isOpen
                                 ? <ChevronUp size={14} className="text-text-muted" />
@@ -304,7 +320,8 @@ export function AsesorEstudianteHistoria() {
                                     {obs.notasImportantes && (
                                       <div className="bg-surface-elevated border border-border-light rounded-2xl p-4">
                                         <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                          <FileText size={10} /> Notas del asesor
+                                          <FileText size={10} />
+                                          Notas de {isMine ? 'ti' : (sesion.asesor?.nombre ?? 'asesor')}
                                         </p>
                                         <p className="text-sm text-text-muted leading-relaxed">{obs.notasImportantes}</p>
                                       </div>

@@ -485,10 +485,13 @@ export async function getEstudianteHistoria(req: AsesorRequest, res: Response): 
         },
       },
     }),
-    // All sessions this asesor has with the student (all states)
+    // All sessions this student has had with ANY asesor (all states)
     prisma.sesion.findMany({
-      where: { asesorId: req.asesorId!, userId },
-      include: { observaciones: true },
+      where: { userId },
+      include: {
+        observaciones: true,
+        asesor: { select: { id: true, nombre: true, carrera: true } },
+      },
       orderBy: { fechaHora: 'asc' },
     }),
   ])
