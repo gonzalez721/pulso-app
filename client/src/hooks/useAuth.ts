@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { authApi, userApi } from '../api/endpoints'
 import { useAuthStore } from '../store/authStore'
 
-export function useLogin() {
+export function useLogin(opts?: { onUnverified?: () => void }) {
   const { setAuth } = useAuthStore()
   const navigate = useNavigate()
 
@@ -11,25 +11,25 @@ export function useLogin() {
     mutationFn: (data: { email: string; password: string }) => authApi.login(data),
     onSuccess: ({ data }) => {
       setAuth(data.user, data.accessToken, data.refreshToken)
-      if (data.user.onboardingComplete) {
-        navigate('/dashboard')
-      } else {
-        navigate('/onboarding')
+      navigate(data.user.onboardingComplete ? '/dashboard' : '/onboarding')
+    },
+    onError: (err: any) => {
+      if (err?.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+        opts?.onUnverified?.()
       }
     },
   })
 }
 
 export function useRegister() {
-  const { setAuth } = useAuthStore()
   const navigate = useNavigate()
 
   return useMutation({
-    mutationFn: (data: { email: string; password: string; nombre: string }) =>
+    mutationFn: (data: { email: string; password: string; nombre: string; universidad?: string; semestre?: number }) =>
       authApi.register(data),
-    onSuccess: ({ data }) => {
-      setAuth(data.user, data.accessToken, data.refreshToken)
-      navigate('/onboarding')
+    onSuccess: () => {
+      // Registration now requires email verification — redirect to check-email page
+      navigate('/verify-email')
     },
   })
 }

@@ -1,8 +1,21 @@
 import { Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { prisma } from '../lib/prisma'
 import { signAccessToken, signRefreshToken, saveRefreshToken, verifyRefreshToken, isRefreshTokenValid, revokeRefreshToken } from '../lib/jwt'
 import { AsesorRequest } from '../middleware/asesorAuth'
+import { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail } from '../lib/resend'
+
+const CLIENT_URL = process.env.FRONTEND_URL ?? 'https://client-silk-one.vercel.app'
+
+async function createVerificationToken(userId: string, type: 'email_verify' | 'password_reset') {
+  await prisma.verificationToken.deleteMany({ where: { userId, type } })
+  const token = crypto.randomBytes(32).toString('hex')
+  const hours = type === 'email_verify' ? 24 : 1
+  const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000)
+  await prisma.verificationToken.create({ data: { userId, token, type, expiresAt } })
+  return token
+}
 
 // ─── Auth ──────────────────────────────────────────────────────────────────
 
@@ -39,16 +52,21 @@ export async function asesorRegister(req: Request, res: Response): Promise<void>
       carrera,
       semestre: Number(semestre),
       bio: bio || null,
+      emailVerified: false,
     },
     select: { id: true, email: true, nombre: true, carrera: true, semestre: true, bio: true, fotoUrl: true },
   })
 
-  const payload = { userId: asesor.id, email: asesor.email, role: 'asesor' } as any
-  const accessToken  = signAccessToken(payload)
-  const refreshToken = signRefreshToken(payload)
-  await saveRefreshToken(asesor.id, refreshToken)
+  // Send verification email
+  const token = await createVerificationToken(asesor.id, 'email_verify')
+  const verifyUrl = `${CLIENT_URL}/verify-email?token=${token}&role=mentor`
+  sendVerificationEmail({ to: asesor.email, nombre: asesor.nombre, verifyUrl, role: 'mentor' }).catch(console.error)
 
-  res.status(201).json({ asesor, accessToken, refreshToken })
+  res.status(201).json({
+    message: 'Cuenta creada. Revisa tu correo para verificar tu cuenta.',
+    asesor,
+    requiresVerification: true,
+  })
 }
 
 export async function asesorLogin(req: Request, res: Response): Promise<void> {
@@ -66,7 +84,15 @@ export async function asesorLogin(req: Request, res: Response): Promise<void> {
   const valid = await bcrypt.compare(password, asesor.password)
   if (!valid) { res.status(401).json({ error: 'Credenciales incorrectas' }); return }
 
-  // Embed role:'asesor' in token so middleware can distinguish
+  if (!asesor.emailVerified) {
+    res.status(403).json({
+      error: 'Debes verificar tu correo antes de ingresar. Revisa tu bandeja de entrada.',
+      code: 'EMAIL_NOT_VERIFIED',
+      email: asesor.email,
+    })
+    return
+  }
+
   const payload = { userId: asesor.id, email: asesor.email, role: 'asesor' } as any
   const accessToken  = signAccessToken(payload)
   const refreshToken = signRefreshToken(payload)
@@ -81,6 +107,79 @@ export async function asesorLogin(req: Request, res: Response): Promise<void> {
     accessToken,
     refreshToken,
   })
+}
+
+export async function asesorVerifyEmail(req: Request, res: Response): Promise<void> {
+  const { token } = req.query as { token?: string }
+  if (!token) { res.status(400).json({ error: 'Token requerido' }); return }
+
+  const record = await prisma.verificationToken.findUnique({ where: { token } })
+  if (!record || record.type !== 'email_verify') { res.status(400).json({ error: 'Token inválido' }); return }
+  if (record.expiresAt < new Date()) {
+    await prisma.verificationToken.delete({ where: { token } })
+    res.status(400).json({ error: 'El enlace ha expirado. Solicita uno nuevo.' }); return
+  }
+
+  const asesor = await prisma.asesor.update({
+    where: { id: record.userId },
+    data: { emailVerified: true },
+    select: { id: true, email: true, nombre: true, carrera: true, semestre: true, bio: true, fotoUrl: true },
+  })
+  await prisma.verificationToken.delete({ where: { token } })
+
+  sendWelcomeEmail({ to: asesor.email, nombre: asesor.nombre, role: 'mentor' }).catch(console.error)
+
+  const payload = { userId: asesor.id, email: asesor.email, role: 'asesor' } as any
+  const accessToken  = signAccessToken(payload)
+  const refreshToken = signRefreshToken(payload)
+  await saveRefreshToken(asesor.id, refreshToken)
+
+  res.json({ message: '¡Correo verificado!', asesor, accessToken, refreshToken })
+}
+
+export async function asesorResendVerification(req: Request, res: Response): Promise<void> {
+  const { email } = req.body
+  if (!email) { res.status(400).json({ error: 'Email requerido' }); return }
+
+  const asesor = await prisma.asesor.findUnique({ where: { email: email.toLowerCase() } })
+  if (!asesor) { res.json({ message: 'Si el correo existe, recibirás un nuevo enlace.' }); return }
+  if (asesor.emailVerified) { res.json({ message: 'Tu correo ya está verificado.' }); return }
+
+  const token = await createVerificationToken(asesor.id, 'email_verify')
+  const verifyUrl = `${CLIENT_URL}/verify-email?token=${token}&role=mentor`
+  sendVerificationEmail({ to: asesor.email, nombre: asesor.nombre, verifyUrl, role: 'mentor' }).catch(console.error)
+  res.json({ message: 'Enlace de verificación enviado.' })
+}
+
+export async function asesorForgotPassword(req: Request, res: Response): Promise<void> {
+  const { email } = req.body
+  if (!email) { res.status(400).json({ error: 'Email requerido' }); return }
+
+  const asesor = await prisma.asesor.findUnique({ where: { email: email.toLowerCase() } })
+  if (asesor) {
+    const token = await createVerificationToken(asesor.id, 'password_reset')
+    const resetUrl = `${CLIENT_URL}/reset-password?token=${token}&role=mentor`
+    sendPasswordResetEmail({ to: asesor.email, nombre: asesor.nombre, resetUrl }).catch(console.error)
+  }
+  res.json({ message: 'Si el correo existe, recibirás un enlace para restablecer tu contraseña.' })
+}
+
+export async function asesorResetPassword(req: Request, res: Response): Promise<void> {
+  const { token, password } = req.body
+  if (!token || !password) { res.status(400).json({ error: 'Token y contraseña requeridos' }); return }
+  if (password.length < 8) { res.status(400).json({ error: 'Mínimo 8 caracteres' }); return }
+
+  const record = await prisma.verificationToken.findUnique({ where: { token } })
+  if (!record || record.type !== 'password_reset') { res.status(400).json({ error: 'Token inválido' }); return }
+  if (record.expiresAt < new Date()) {
+    await prisma.verificationToken.delete({ where: { token } })
+    res.status(400).json({ error: 'El enlace ha expirado.' }); return
+  }
+
+  const hashed = await bcrypt.hash(password, 10)
+  await prisma.asesor.update({ where: { id: record.userId }, data: { password: hashed } })
+  await prisma.verificationToken.delete({ where: { token } })
+  res.json({ message: 'Contraseña actualizada correctamente.' })
 }
 
 export async function asesorRefresh(req: Request, res: Response): Promise<void> {

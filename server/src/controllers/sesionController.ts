@@ -116,7 +116,7 @@ export async function bookSesion(req: AuthRequest, res: Response): Promise<void>
     userName: student.nombre,
     asesorName: asesor.nombre,
     fechaHora: fecha,
-    linkZoom: linkMeet,
+    linkMeet: linkMeet,
     temas,
   }).catch(() => {})
 

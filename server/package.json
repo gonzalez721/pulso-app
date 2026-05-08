@@ -34,7 +34,7 @@
     "morgan": "^1.10.0",
     "openai": "^4.52.7",
     "prisma": "^5.14.0",
-    "resend": "^3.3.0",
+    "resend": "^3.5.0",
     "tsx": "^4.16.2",
     "typescript": "^5.5.3",
     "uuid": "^10.0.0",
@@ -42,6 +42,5 @@
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
-  },
-  "devDependencies": {}
+  }
 }

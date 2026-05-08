@@ -4,19 +4,18 @@ import { asesorEndpoints } from '../api/asesorClient'
 import { useAsesorStore } from '../store/asesorStore'
 
 export function useAsesorRegister() {
-  const { setAuth } = useAsesorStore()
   const navigate = useNavigate()
   return useMutation({
     mutationFn: (data: { email: string; password: string; nombre: string; carrera: string; semestre: number; bio?: string }) =>
       asesorEndpoints.register(data).then((r) => r.data),
-    onSuccess: (data) => {
-      setAuth(data.asesor, data.accessToken, data.refreshToken)
-      navigate('/asesor/dashboard')
+    onSuccess: () => {
+      // Registration requires email verification
+      navigate('/verify-email?role=mentor')
     },
   })
 }
 
-export function useAsesorLogin() {
+export function useAsesorLogin(opts?: { onUnverified?: () => void }) {
   const { setAuth } = useAsesorStore()
   const navigate = useNavigate()
   return useMutation({
@@ -25,6 +24,11 @@ export function useAsesorLogin() {
     onSuccess: (data) => {
       setAuth(data.asesor, data.accessToken, data.refreshToken)
       navigate('/asesor/dashboard')
+    },
+    onError: (err: any) => {
+      if (err?.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+        opts?.onUnverified?.()
+      }
     },
   })
 }
@@ -43,7 +47,7 @@ export function useAsesorSesiones(estado?: string) {
     queryFn: () => asesorEndpoints.getSesiones(estado).then((r) => r.data),
     enabled: isAuthenticated,
     staleTime: 60 * 1000,
-    refetchInterval: 30 * 1000,   // auto-refresh every 30s
+    refetchInterval: 30 * 1000,
   })
 }
 

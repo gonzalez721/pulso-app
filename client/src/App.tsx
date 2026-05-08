@@ -18,6 +18,9 @@ import { AsesorRegisterPage } from './pages/asesor/AsesorRegisterPage'
 import { AsesorDashboard } from './pages/asesor/AsesorDashboard'
 import { AsesorSesionesPage } from './pages/asesor/AsesorSesionesPage'
 import { AsesorSesionDetail } from './pages/asesor/AsesorSesionDetail'
+import { VerifyEmailPage } from './pages/VerifyEmailPage'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,6 +65,9 @@ export default function App() {
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Onboarding (auth required, onboarding not complete) */}
           <Route
