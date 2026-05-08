@@ -24,11 +24,15 @@ export function PactoSetupPage() {
 
   const [copied, setCopied] = useState(false)
   const [modo, setModo] = useState<'humano' | 'ia'>(pactoStatus?.modo as any ?? 'humano')
+  const [error, setError] = useState('')
 
   const inviteUrl = pactoStatus?.inviteUrl ?? ''
 
   const handleActivar = () => {
-    setup(modo)
+    setError('')
+    setup(modo, {
+      onError: () => setError('No se pudo activar PACTO. Intenta de nuevo en unos segundos.'),
+    })
   }
 
   const handleCopiar = () => {
@@ -181,6 +185,16 @@ export function PactoSetupPage() {
               </>
             )}
           </motion.button>
+
+          {error && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-sm text-red-400 text-center font-medium px-2"
+            >
+              {error}
+            </motion.p>
+          )}
 
           {/* Invite section (human mode, active) */}
           <AnimatePresence>
