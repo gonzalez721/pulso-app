@@ -12,7 +12,7 @@ function generateRoomName(params: {
   fechaInicio: Date
 }): string {
   const seed = `${params.asesorEmail}-${params.estudianteEmail}-${params.fechaInicio.getTime()}`
-  const hash = crypto.createHash('sha256').update(seed).digest('hex').slice(0, 8)
+  const hash = crypto.createHash('sha256').update(seed).digest('hex').slice(0, 10)
   return `pulso-${hash}`
 }
 
@@ -26,9 +26,36 @@ export async function createGoogleMeetSession(params: {
   asesorNombre: string
   estudianteNombre: string
 }): Promise<MeetResult> {
-  const room = generateRoomName(params)
+  const roomName = generateRoomName(params)
+  const apiKey = process.env.DAILY_API_KEY
+
+  if (apiKey) {
+    try {
+      const res = await fetch('https://api.daily.co/v1/rooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          name: roomName,
+          privacy: 'public',
+          properties: {
+            enable_prejoin_ui: false,
+            exp: Math.floor(params.fechaInicio.getTime() / 1000) + params.duracionMin * 60 + 7200,
+          },
+        }),
+      })
+      if (res.ok || res.status === 409) {
+        const data = res.ok ? await res.json() as { url: string } : null
+        return {
+          linkMeet: data?.url ?? `https://pulsopacto.daily.co/${roomName}`,
+          googleCalendarEventId: null,
+          calendarEventUrl: null,
+        }
+      }
+    } catch { /* fallback */ }
+  }
+
   return {
-    linkMeet: `https://8x8.vc/${room}`,
+    linkMeet: `https://pulsopacto.daily.co/${roomName}`,
     googleCalendarEventId: null,
     calendarEventUrl: null,
   }
