@@ -343,6 +343,35 @@ function buildAlertas(
   return alertas
 }
 
+// ─── Availability ──────────────────────────────────────────────────────────
+
+export async function updateDisponibilidad(req: AsesorRequest, res: Response): Promise<void> {
+  const { disponibilidad } = req.body
+
+  if (!Array.isArray(disponibilidad)) {
+    res.status(400).json({ error: 'disponibilidad debe ser un arreglo' }); return
+  }
+
+  // Validate structure: [{ dia: string, horas: string[] }]
+  const DIAS_VALIDOS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+  for (const slot of disponibilidad) {
+    if (!slot.dia || !DIAS_VALIDOS.includes(slot.dia)) {
+      res.status(400).json({ error: `Día inválido: ${slot.dia}` }); return
+    }
+    if (!Array.isArray(slot.horas)) {
+      res.status(400).json({ error: 'horas debe ser un arreglo' }); return
+    }
+  }
+
+  const updated = await prisma.asesor.update({
+    where: { id: req.asesorId! },
+    data: { disponibilidad },
+    select: { id: true, disponibilidad: true },
+  })
+
+  res.json(updated)
+}
+
 // ─── Asesor saves observations after session ───────────────────────────────
 
 export async function saveObservacion(req: AsesorRequest, res: Response): Promise<void> {

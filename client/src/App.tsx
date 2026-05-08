@@ -18,6 +18,7 @@ import { AsesorRegisterPage } from './pages/asesor/AsesorRegisterPage'
 import { AsesorDashboard } from './pages/asesor/AsesorDashboard'
 import { AsesorSesionesPage } from './pages/asesor/AsesorSesionesPage'
 import { AsesorSesionDetail } from './pages/asesor/AsesorSesionDetail'
+import { AsesorDisponibilidadPage } from './pages/asesor/AsesorDisponibilidadPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
@@ -111,6 +112,7 @@ export default function App() {
             <Route path="dashboard" element={<AsesorDashboard />} />
             <Route path="sesiones" element={<AsesorSesionesPage />} />
             <Route path="sesion/:sesionId" element={<AsesorSesionDetail />} />
+            <Route path="disponibilidad" element={<AsesorDisponibilidadPage />} />
           </Route>
 
           {/* Landing — entrada unificada */}

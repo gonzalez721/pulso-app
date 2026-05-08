@@ -74,3 +74,25 @@ export function useSaveObservacion() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['asesor', 'sesiones'] }),
   })
 }
+
+export function useAsesorMe() {
+  const { isAuthenticated } = useAsesorStore()
+  return useQuery({
+    queryKey: ['asesor', 'me'],
+    queryFn: () => asesorEndpoints.getMe().then((r) => r.data),
+    enabled: isAuthenticated,
+    staleTime: 2 * 60 * 1000,
+  })
+}
+
+export function useUpdateDisponibilidad() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (disponibilidad: Array<{ dia: string; horas: string[] }>) =>
+      asesorEndpoints.updateDisponibilidad(disponibilidad).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['asesor', 'me'] })
+      qc.invalidateQueries({ queryKey: ['disponibilidad'] })
+    },
+  })
+}

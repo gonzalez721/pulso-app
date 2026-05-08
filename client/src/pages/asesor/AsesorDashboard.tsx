@@ -1,14 +1,18 @@
 import { motion } from 'framer-motion'
-import { Calendar, Clock, ChevronRight } from 'lucide-react'
+import { Calendar, Clock, ChevronRight, AlertCircle } from 'lucide-react'
 import { useAsesorStore } from '../../store/asesorStore'
-import { useAsesorSesiones } from '../../hooks/useAsesor'
+import { useAsesorSesiones, useAsesorMe } from '../../hooks/useAsesor'
 import { formatDate, formatTime, getInitials } from '../../lib/utils'
 import { useNavigate } from 'react-router-dom'
 
 export function AsesorDashboard() {
   const { asesor } = useAsesorStore()
   const { data: sesiones = [], isLoading } = useAsesorSesiones()
+  const { data: profile } = useAsesorMe()
   const navigate = useNavigate()
+
+  const disponibilidad = (profile?.disponibilidad ?? []) as Array<{ dia: string; horas: string[] }>
+  const totalSlots = disponibilidad.reduce((s, d) => s + d.horas.length, 0)
 
   const now = new Date()
   const proximas    = sesiones.filter((s: any) => s.estado === 'programada' && new Date(s.fechaHora) >= now)
@@ -52,6 +56,27 @@ export function AsesorDashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* Availability prompt */}
+      {totalSlots === 0 && (
+        <motion.button
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          onClick={() => navigate('/asesor/disponibilidad')}
+          className="w-full flex items-center gap-4 p-4 rounded-3xl border text-left transition-all hover:scale-[1.01]"
+          style={{ background: 'linear-gradient(135deg,rgba(124,77,255,0.12),rgba(168,255,62,0.05))', borderColor: 'rgba(124,77,255,0.35)' }}
+        >
+          <div className="w-10 h-10 rounded-2xl bg-primary-dark/30 flex items-center justify-center flex-shrink-0">
+            <AlertCircle size={20} className="text-yellow-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-white text-sm">Configura tu horario</p>
+            <p className="text-xs text-text-muted mt-0.5">Los estudiantes no pueden agendarte hasta que definas tu disponibilidad</p>
+          </div>
+          <ChevronRight size={16} className="text-text-muted flex-shrink-0" />
+        </motion.button>
+      )}
 
       {/* Today's sessions */}
       <div>

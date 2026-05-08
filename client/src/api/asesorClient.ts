@@ -67,4 +67,9 @@ export const asesorEndpoints = {
     compromisosProximaSemana: string[]
     notasImportantes?: string
   }) => asesorApi.post(`/sesiones/${sesionId}/observacion`, data),
+
+  getDisponibilidad: () => asesorApi.get<{ id: string; disponibilidad: Array<{ dia: string; horas: string[] }> }>('/me'),
+
+  updateDisponibilidad: (disponibilidad: Array<{ dia: string; horas: string[] }>) =>
+    asesorApi.patch<{ id: string; disponibilidad: Array<{ dia: string; horas: string[] }> }>('/disponibilidad', { disponibilidad }),
 }

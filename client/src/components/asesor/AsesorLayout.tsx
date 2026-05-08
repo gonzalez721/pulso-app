@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom'
-import { LayoutDashboard, CalendarDays, LogOut } from 'lucide-react'
+import { LayoutDashboard, CalendarDays, Clock, LogOut } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAsesorStore } from '../../store/asesorStore'
 import { useAsesorLogout } from '../../hooks/useAsesor'
@@ -42,8 +42,9 @@ export function AsesorLayout() {
         <div className="mx-4 mb-4">
           <div className="bg-surface-raised border border-border-light rounded-3xl flex overflow-hidden shadow-glow">
             {[
-              { to: '/asesor/dashboard', icon: LayoutDashboard, label: 'Inicio' },
-              { to: '/asesor/sesiones',  icon: CalendarDays,    label: 'Sesiones' },
+              { to: '/asesor/dashboard',       icon: LayoutDashboard, label: 'Inicio' },
+              { to: '/asesor/sesiones',         icon: CalendarDays,    label: 'Sesiones' },
+              { to: '/asesor/disponibilidad',   icon: Clock,           label: 'Horario' },
             ].map(({ to, icon: Icon, label }) => (
               <NavLink key={to} to={to} className="flex-1 flex flex-col items-center gap-1 py-3 transition-colors relative">
                 {({ isActive }) => (
