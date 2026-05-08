@@ -95,6 +95,23 @@ app.use(errorHandler)
 
 app.listen(PORT, () => {
   console.log(`🚀 PULSO API running on http://localhost:${PORT}`)
+
+  // ── Keep-alive: prevent Render free tier from sleeping ──────────────────
+  // Render sleeps services after 15 min of inactivity — self-ping every 14 min
+  // RENDER_EXTERNAL_URL is automatically set by Render in all deployed instances
+  const selfUrl = process.env.RENDER_EXTERNAL_URL
+  if (selfUrl) {
+    const INTERVAL_MS = 14 * 60 * 1000 // 14 minutes
+    setInterval(async () => {
+      try {
+        const res = await fetch(`${selfUrl}/health`, { signal: AbortSignal.timeout(10_000) })
+        console.log(`[keepalive] ping OK — ${(await res.json() as any).ts}`)
+      } catch (e: any) {
+        console.warn(`[keepalive] ping failed: ${e.message}`)
+      }
+    }, INTERVAL_MS)
+    console.log(`[keepalive] self-ping every 14 min → ${selfUrl}/health`)
+  }
 })
 
 export default app
