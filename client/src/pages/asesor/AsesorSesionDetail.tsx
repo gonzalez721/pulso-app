@@ -25,7 +25,7 @@ const MOOD_EMOJI: Record<string, string> = {
 }
 
 export function AsesorSesionDetail() {
-  const { id } = useParams<{ id: string }>()
+  const { sesionId: id } = useParams<{ sesionId: string }>()
   const navigate = useNavigate()
 
   const { data: sesiones = [] } = useAsesorSesiones()
