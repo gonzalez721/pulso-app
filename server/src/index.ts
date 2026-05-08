@@ -28,6 +28,8 @@ app.use(
         'http://localhost:4173',
         process.env.FRONTEND_URL ?? '',
         'https://client-silk-one.vercel.app',
+        'https://pulsopacto.online',
+        'https://www.pulsopacto.online',
         'https://pulso-app-gonzalez.vercel.app',
       ].filter(Boolean)
 

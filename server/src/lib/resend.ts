@@ -115,7 +115,7 @@ export async function sendWelcomeEmail(params: {
         📅 Define tu disponibilidad<br>
         🎓 Espera solicitudes de sesiones de estudiantes</p>
       </div>`}
-      <a href="https://client-silk-one.vercel.app/${isStudent ? 'login' : 'asesor/login'}" class="btn">Ingresar a PULSO →</a>
+      <a href="https://pulsopacto.online/${isStudent ? 'login' : 'asesor/login'}" class="btn">Ingresar a PULSO →</a>
     `),
   })
 }
@@ -201,7 +201,7 @@ export async function sendSessionCancellation(params: {
       <p>Hola <strong style="color:#fff;">${params.userName}</strong>,<br>
       tu sesión con <strong style="color:#fff;">${params.asesorName}</strong> programada para el <strong style="color:#fff;">${fecha}</strong> ha sido cancelada.</p>
       <p>Puedes agendar una nueva sesión en cualquier momento desde la app.</p>
-      <a href="https://client-silk-one.vercel.app/sessions" class="btn">Agendar nueva sesión →</a>
+      <a href="https://pulsopacto.online/sessions" class="btn">Agendar nueva sesión →</a>
     `),
   })
 }
