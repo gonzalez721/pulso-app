@@ -14,6 +14,7 @@ import insightRoutes from './routes/insights'
 import moodRoutes from './routes/mood'
 import asesorRoutes from './routes/asesor'
 import { errorHandler, notFound } from './middleware/errorHandler'
+import { sendVerificationEmail } from './lib/resend'
 
 const app = express()
 const PORT = process.env.PORT ?? 3001
@@ -57,6 +58,25 @@ app.use(express.urlencoded({ extended: true }))
 
 // Health check
 app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
+
+// Email diagnostic — call GET /health/email?to=you@example.com to test Resend
+app.get('/health/email', async (req, res) => {
+  const to = (req.query.to as string) ?? process.env.TEST_EMAIL
+  if (!to) { res.status(400).json({ error: 'Provide ?to=email' }); return }
+  try {
+    await sendVerificationEmail({
+      to,
+      nombre: 'Test',
+      verifyUrl: 'https://pulsopacto.online/verify-email?token=TEST',
+      role: 'student',
+    })
+    console.log(`[Resend] test email sent to ${to}`)
+    res.json({ ok: true, to, key: process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.slice(0, 8) + '…' : 'NOT SET' })
+  } catch (e: any) {
+    console.error('[Resend] test email FAILED:', e.message)
+    res.status(500).json({ ok: false, error: e.message, key: process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.slice(0, 8) + '…' : 'NOT SET' })
+  }
+})
 
 
 // Routes

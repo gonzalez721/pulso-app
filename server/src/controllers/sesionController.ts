@@ -118,7 +118,7 @@ export async function bookSesion(req: AuthRequest, res: Response): Promise<void>
     fechaHora: fecha,
     linkMeet: linkMeet,
     temas,
-  }).catch(() => {})
+  }).catch((e) => console.error('[Resend] confirm student:', e.message))
 
   // Notification email to asesor (non-blocking)
   sendSessionNotificationAsesor({
@@ -129,7 +129,7 @@ export async function bookSesion(req: AuthRequest, res: Response): Promise<void>
     fechaHora: fecha,
     linkMeet: linkMeet,
     temas,
-  }).catch(() => {})
+  }).catch((e) => console.error('[Resend] notify asesor:', e.message))
 
   res.status(201).json(sesion)
   } catch (err) {
@@ -167,14 +167,14 @@ export async function cancelSesion(req: AuthRequest, res: Response): Promise<voi
       userName: student.nombre,
       asesorName: sesion.asesor.nombre,
       fechaHora: sesion.fechaHora,
-    }).catch(() => {})
+    }).catch((e) => console.error('[Resend] cancel student:', e.message))
 
     sendSessionCancellationAsesor({
       to: sesion.asesor.email,
       asesorName: sesion.asesor.nombre,
       studentName: student.nombre,
       fechaHora: sesion.fechaHora,
-    }).catch(() => {})
+    }).catch((e) => console.error('[Resend] cancel asesor:', e.message))
   }
 
   res.json(updated)

@@ -78,9 +78,9 @@ export async function register(req: Request, res: Response): Promise<void> {
   if (requireVerification) {
     const token = await createVerificationToken(user.id, 'email_verify')
     const verifyUrl = `${CLIENT_URL}/verify-email?token=${token}`
-    sendVerificationEmail({ to: user.email, nombre: user.nombre, verifyUrl, role: 'student' }).catch(() => {})
+    sendVerificationEmail({ to: user.email, nombre: user.nombre, verifyUrl, role: 'student' }).catch((e) => console.error('[Resend] verify student:', e.message))
   } else {
-    sendWelcomeEmail({ to: user.email, nombre: user.nombre, role: 'student' }).catch(() => {})
+    sendWelcomeEmail({ to: user.email, nombre: user.nombre, role: 'student' }).catch((e) => console.error('[Resend] welcome student:', e.message))
   }
 
   if (requireVerification) {
