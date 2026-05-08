@@ -35,7 +35,7 @@ export function AsesorLoginPage() {
           <Input
             label="Email institucional"
             type="email"
-            placeholder="tu@pulso.app"
+            placeholder="tu.nombre@universidad.edu.co"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
@@ -67,14 +67,7 @@ export function AsesorLoginPage() {
           </Button>
         </div>
 
-        {/* Demo hint */}
-        <div className="mt-4 bg-surface-elevated border border-border-light rounded-2xl p-3 text-center">
-          <p className="text-text-dim text-xs">
-            Demo: sofia.ramirez@pulso.app / asesor1234
-          </p>
-        </div>
-
-        <p className="text-center text-sm text-text-muted">
+        <p className="text-center text-sm text-text-muted mt-5">
           ¿Eres mentor nuevo?{' '}
           <Link to="/asesor/register" className="font-bold text-primary-dark hover:brightness-110 transition-all">
             Regístrate aquí
