@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import {
-  asesorLogin, asesorRefresh,
+  asesorRegister, asesorLogin, asesorRefresh,
   getAsesorProfile, getAsesorSesiones,
   getEstudianteStats, saveObservacion,
 } from '../controllers/asesorController'
@@ -9,8 +9,9 @@ import { requireAsesorAuth } from '../middleware/asesorAuth'
 const router = Router()
 
 // Public
-router.post('/login',   asesorLogin)
-router.post('/refresh', asesorRefresh)
+router.post('/register', asesorRegister)
+router.post('/login',    asesorLogin)
+router.post('/refresh',  asesorRefresh)
 
 // Protected — asesor only
 router.get('/me',                                    requireAsesorAuth, getAsesorProfile)

@@ -36,9 +36,9 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Email"
+            label="Correo institucional"
             type="email"
-            placeholder="tu@email.com"
+            placeholder="tu.nombre@universidad.edu.co"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -72,8 +72,10 @@ export function LoginPage() {
           </Link>
         </p>
 
-        <div className="bg-surface-raised border border-border-light rounded-2xl p-3 text-center">
-          <p className="text-xs text-text-muted font-medium">Demo: demo@pulso.app / demo1234</p>
+        <div className="bg-surface-raised border border-neon-green/20 rounded-2xl p-3 text-center">
+          <p className="text-xs text-neon-green/80 font-medium">
+            🎓 Solo correos institucionales .edu.co
+          </p>
         </div>
       </motion.div>
     </div>

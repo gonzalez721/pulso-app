@@ -18,7 +18,18 @@ export async function register(req: Request, res: Response): Promise<void> {
     return
   }
 
-  const exists = await prisma.user.findUnique({ where: { email } })
+  // Solo correos institucionales colombianos
+  if (!email.toLowerCase().endsWith('.edu.co')) {
+    res.status(400).json({ error: 'Debes usar tu correo institucional (.edu.co)' })
+    return
+  }
+
+  if (password.length < 8) {
+    res.status(400).json({ error: 'La contraseña debe tener mínimo 8 caracteres' })
+    return
+  }
+
+  const exists = await prisma.user.findUnique({ where: { email: email.toLowerCase() } })
   if (exists) {
     res.status(409).json({ error: 'El email ya está registrado' })
     return
@@ -26,7 +37,7 @@ export async function register(req: Request, res: Response): Promise<void> {
 
   const hashed = await bcrypt.hash(password, 10)
   const user = await prisma.user.create({
-    data: { email, password: hashed, nombre, universidad, semestre: semestre ? Number(semestre) : undefined },
+    data: { email: email.toLowerCase(), password: hashed, nombre, universidad, semestre: semestre ? Number(semestre) : undefined },
     select: { id: true, email: true, nombre: true, onboardingComplete: true },
   })
 

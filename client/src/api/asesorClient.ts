@@ -47,6 +47,9 @@ asesorApi.interceptors.response.use(
 
 // API methods
 export const asesorEndpoints = {
+  register: (data: { email: string; password: string; nombre: string; carrera: string; semestre: number; bio?: string }) =>
+    asesorApi.post<{ asesor: any; accessToken: string; refreshToken: string }>('/register', data),
+
   login: (data: { email: string; password: string }) =>
     asesorApi.post<{ asesor: any; accessToken: string; refreshToken: string }>('/login', data),
 

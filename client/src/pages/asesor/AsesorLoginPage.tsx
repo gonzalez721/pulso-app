@@ -74,7 +74,14 @@ export function AsesorLoginPage() {
           </p>
         </div>
 
-        <div className="mt-6 text-center">
+        <p className="text-center text-sm text-text-muted">
+          ¿Eres mentor nuevo?{' '}
+          <Link to="/asesor/register" className="font-bold text-primary-dark hover:brightness-110 transition-all">
+            Regístrate aquí
+          </Link>
+        </p>
+
+        <div className="text-center">
           <Link to="/login" className="text-text-muted text-xs hover:text-white transition-colors">
             ← Volver al portal estudiante
           </Link>

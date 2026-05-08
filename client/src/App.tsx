@@ -13,6 +13,7 @@ import { SessionsPage } from './pages/sessions/SessionsPage'
 import { ProfilePage } from './pages/profile/ProfilePage'
 import { MoodCheckinPage } from './pages/mood/MoodCheckinPage'
 import { AsesorLoginPage } from './pages/asesor/AsesorLoginPage'
+import { AsesorRegisterPage } from './pages/asesor/AsesorRegisterPage'
 import { AsesorDashboard } from './pages/asesor/AsesorDashboard'
 import { AsesorSesionesPage } from './pages/asesor/AsesorSesionesPage'
 import { AsesorSesionDetail } from './pages/asesor/AsesorSesionDetail'
@@ -81,6 +82,7 @@ export default function App() {
 
           {/* Asesor portal */}
           <Route path="/asesor/login" element={<AsesorLoginPage />} />
+          <Route path="/asesor/register" element={<AsesorRegisterPage />} />
           <Route
             path="/asesor"
             element={

@@ -6,11 +6,61 @@ import { AsesorRequest } from '../middleware/asesorAuth'
 
 // ─── Auth ──────────────────────────────────────────────────────────────────
 
+export async function asesorRegister(req: Request, res: Response): Promise<void> {
+  const { email, password, nombre, carrera, semestre, bio } = req.body
+
+  if (!email || !password || !nombre || !carrera || !semestre) {
+    res.status(400).json({ error: 'Email, contraseña, nombre, carrera y semestre son requeridos' })
+    return
+  }
+
+  if (!email.toLowerCase().endsWith('.edu.co')) {
+    res.status(400).json({ error: 'Debes usar tu correo institucional (.edu.co)' })
+    return
+  }
+
+  if (password.length < 8) {
+    res.status(400).json({ error: 'La contraseña debe tener mínimo 8 caracteres' })
+    return
+  }
+
+  const exists = await prisma.asesor.findUnique({ where: { email: email.toLowerCase() } })
+  if (exists) {
+    res.status(409).json({ error: 'El email ya está registrado como asesor' })
+    return
+  }
+
+  const hashed = await bcrypt.hash(password, 10)
+  const asesor = await prisma.asesor.create({
+    data: {
+      email: email.toLowerCase(),
+      password: hashed,
+      nombre,
+      carrera,
+      semestre: Number(semestre),
+      bio: bio || null,
+    },
+    select: { id: true, email: true, nombre: true, carrera: true, semestre: true, bio: true, fotoUrl: true },
+  })
+
+  const payload = { userId: asesor.id, email: asesor.email, role: 'asesor' } as any
+  const accessToken  = signAccessToken(payload)
+  const refreshToken = signRefreshToken(payload)
+  await saveRefreshToken(asesor.id, refreshToken)
+
+  res.status(201).json({ asesor, accessToken, refreshToken })
+}
+
 export async function asesorLogin(req: Request, res: Response): Promise<void> {
   const { email, password } = req.body
   if (!email || !password) { res.status(400).json({ error: 'Email y contraseña requeridos' }); return }
 
-  const asesor = await prisma.asesor.findUnique({ where: { email } })
+  if (!email.toLowerCase().endsWith('.edu.co')) {
+    res.status(400).json({ error: 'Debes usar tu correo institucional (.edu.co)' })
+    return
+  }
+
+  const asesor = await prisma.asesor.findUnique({ where: { email: email.toLowerCase() } })
   if (!asesor || !asesor.password) { res.status(401).json({ error: 'Credenciales incorrectas' }); return }
 
   const valid = await bcrypt.compare(password, asesor.password)

@@ -3,6 +3,19 @@ import { useNavigate } from 'react-router-dom'
 import { asesorEndpoints } from '../api/asesorClient'
 import { useAsesorStore } from '../store/asesorStore'
 
+export function useAsesorRegister() {
+  const { setAuth } = useAsesorStore()
+  const navigate = useNavigate()
+  return useMutation({
+    mutationFn: (data: { email: string; password: string; nombre: string; carrera: string; semestre: number; bio?: string }) =>
+      asesorEndpoints.register(data).then((r) => r.data),
+    onSuccess: (data) => {
+      setAuth(data.asesor, data.accessToken, data.refreshToken)
+      navigate('/asesor/dashboard')
+    },
+  })
+}
+
 export function useAsesorLogin() {
   const { setAuth } = useAsesorStore()
   const navigate = useNavigate()
