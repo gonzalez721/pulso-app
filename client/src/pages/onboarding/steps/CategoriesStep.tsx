@@ -17,7 +17,7 @@ export function CategoriesStep({ onNext, loading }: Props) {
   return (
     <div className="flex flex-col min-h-screen px-6 pt-4 pb-8">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h2 className="text-2xl font-extrabold font-display text-primary-dark">
+        <h2 className="text-2xl font-extrabold font-display text-white">
           ¿En qué gastas frecuentemente?
         </h2>
         <p className="text-text-muted mt-1">Selecciona tus categorías principales</p>
@@ -36,15 +36,16 @@ export function CategoriesStep({ onNext, loading }: Props) {
               className={`
                 flex flex-col items-center justify-center gap-2 p-4 rounded-3xl border-2 transition-all aspect-square
                 ${isSelected
-                  ? 'border-primary-dark bg-primary-dark'
-                  : 'border-border-light bg-white hover:border-primary-dark/30'
+                  ? 'border-primary-dark bg-primary-dark/20 shadow-glow'
+                  : 'border-border-light bg-surface-raised hover:border-primary-dark/40'
                 }
               `}
             >
               <span className="text-2xl">{cat.emoji}</span>
-              <span className={`text-xs font-bold text-center leading-tight ${isSelected ? 'text-white' : 'text-text-dark'}`}>
+              <span className={`text-xs font-bold text-center leading-tight ${isSelected ? 'text-white' : 'text-text-muted'}`}>
                 {cat.label}
               </span>
+              {isSelected && <span className="text-neon-green text-xs">✓</span>}
             </motion.button>
           )
         })}

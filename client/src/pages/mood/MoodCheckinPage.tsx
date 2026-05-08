@@ -5,11 +5,11 @@ import { Button } from '../../components/ui/Button'
 import { useSaveMood } from '../../hooks/useInsights'
 
 const MOODS = [
-  { key: 'great', emoji: '😄', label: 'Genial', color: '#B8E8C8' },
-  { key: 'good', emoji: '🙂', label: 'Bien', color: '#B8D4E8' },
-  { key: 'neutral', emoji: '😐', label: 'Regular', color: '#E8D4B8' },
-  { key: 'stressed', emoji: '😰', label: 'Estresado', color: '#FFD4C8' },
-  { key: 'bad', emoji: '😔', label: 'Mal', color: '#FF9B9B' },
+  { key: 'great',    emoji: '😄', label: 'Genial',     color: '#22C55E' },
+  { key: 'good',     emoji: '🙂', label: 'Bien',       color: '#3B82F6' },
+  { key: 'neutral',  emoji: '😐', label: 'Regular',    color: '#F59E0B' },
+  { key: 'stressed', emoji: '😰', label: 'Estresado',  color: '#F97316' },
+  { key: 'bad',      emoji: '😔', label: 'Mal',        color: '#EF4444' },
 ]
 
 export function MoodCheckinPage() {
@@ -33,7 +33,9 @@ export function MoodCheckinPage() {
   }
 
   return (
-    <div className="min-h-screen bg-primary-light flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-[#0A0A12] flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-dark/15 rounded-full blur-3xl pointer-events-none" />
+
       <AnimatePresence mode="wait">
         {saved ? (
           <motion.div
@@ -43,7 +45,7 @@ export function MoodCheckinPage() {
             className="text-center"
           >
             <span className="text-6xl">✅</span>
-            <p className="text-xl font-bold text-primary-dark mt-4">¡Gracias por compartir!</p>
+            <p className="text-xl font-bold text-white mt-4">¡Gracias por compartir!</p>
             <p className="text-text-muted mt-1">Regresando al inicio…</p>
           </motion.div>
         ) : (
@@ -51,10 +53,10 @@ export function MoodCheckinPage() {
             key="form"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-sm space-y-8"
+            className="w-full max-w-sm space-y-8 relative z-10"
           >
             <div className="text-center">
-              <h1 className="text-2xl font-extrabold font-display text-primary-dark">
+              <h1 className="text-2xl font-extrabold font-display text-white">
                 ¿Cómo te sientes hoy?
               </h1>
               <p className="text-text-muted mt-1 text-sm">
@@ -62,7 +64,7 @@ export function MoodCheckinPage() {
               </p>
             </div>
 
-            <div className="flex justify-center gap-3">
+            <div className="flex justify-center gap-2">
               {MOODS.map((m, i) => (
                 <motion.button
                   key={m.key}
@@ -70,15 +72,19 @@ export function MoodCheckinPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.07 }}
                   onClick={() => setSelected(m.key)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-3xl border-2 transition-all ${
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-3xl border-2 transition-all ${
                     selected === m.key
-                      ? 'border-primary-dark scale-110 shadow-card'
-                      : 'border-transparent'
+                      ? 'scale-110'
+                      : 'border-border-light bg-surface-raised hover:border-border-light/80'
                   }`}
-                  style={{ backgroundColor: m.color + (selected === m.key ? 'FF' : '60') }}
+                  style={selected === m.key ? {
+                    backgroundColor: m.color + '20',
+                    borderColor: m.color,
+                    boxShadow: `0 0 20px ${m.color}30`,
+                  } : {}}
                 >
                   <span className="text-3xl">{m.emoji}</span>
-                  <span className="text-[10px] font-bold text-primary-dark">{m.label}</span>
+                  <span className="text-[10px] font-bold text-text-muted">{m.label}</span>
                 </motion.button>
               ))}
             </div>
@@ -90,7 +96,7 @@ export function MoodCheckinPage() {
                   onChange={(e) => setNota(e.target.value)}
                   placeholder="¿Algo más que quieras compartir? (opcional)"
                   rows={3}
-                  className="w-full rounded-2xl border border-border-light bg-white p-4 text-sm text-text-dark placeholder:text-text-muted/60 resize-none focus:outline-none focus:ring-2 focus:ring-primary-dark/20"
+                  className="w-full rounded-2xl border border-border-light bg-surface-elevated p-4 text-sm text-white placeholder:text-text-dim resize-none focus:outline-none focus:ring-2 focus:ring-primary-dark/40"
                 />
               </motion.div>
             )}

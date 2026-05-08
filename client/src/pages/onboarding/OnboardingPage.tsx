@@ -52,17 +52,22 @@ export function OnboardingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-primary-light flex flex-col">
+    <div className="min-h-screen bg-[#0A0A12] flex flex-col relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-dark/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-64 h-64 bg-neon-green/5 rounded-full blur-3xl pointer-events-none" />
+
       {/* Progress bar */}
       {step > 0 && (
-        <div className="px-6 pt-14 pb-4">
+        <div className="px-6 pt-14 pb-4 relative z-10">
           <div className="flex gap-1.5">
             {Array.from({ length: TOTAL_STEPS - 1 }).map((_, i) => (
               <div
                 key={i}
-                className="h-1.5 flex-1 rounded-full transition-all duration-500"
+                className="h-1 flex-1 rounded-full transition-all duration-500"
                 style={{
-                  backgroundColor: i < step ? '#2D1B4E' : '#E5E5E5',
+                  backgroundColor: i < step ? '#A8FF3E' : '#2A2A40',
+                  boxShadow: i < step ? '0 0 8px rgba(168,255,62,0.4)' : 'none',
                 }}
               />
             ))}
@@ -70,7 +75,7 @@ export function OnboardingPage() {
         </div>
       )}
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative z-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}

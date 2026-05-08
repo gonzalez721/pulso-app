@@ -28,8 +28,8 @@ export function SessionDetailModal({ sesion, onClose }: Props) {
     <Modal open={!!sesion} onClose={onClose} title="Detalle de sesión">
       <div className="px-5 py-4 space-y-5">
         {/* Asesor info */}
-        <div className="flex items-center gap-4 bg-primary-light rounded-3xl p-4">
-          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center overflow-hidden flex-shrink-0">
+        <div className="flex items-center gap-4 bg-surface-elevated border border-border-light rounded-3xl p-4">
+          <div className="w-16 h-16 rounded-2xl bg-surface-raised border border-border-light flex items-center justify-center overflow-hidden flex-shrink-0">
             {sesion.asesor.fotoUrl ? (
               <img src={sesion.asesor.fotoUrl} alt={sesion.asesor.nombre} className="w-full h-full object-cover" />
             ) : (
@@ -37,7 +37,7 @@ export function SessionDetailModal({ sesion, onClose }: Props) {
             )}
           </div>
           <div>
-            <p className="font-bold text-primary-dark text-lg">{sesion.asesor.nombre}</p>
+            <p className="font-bold text-white text-lg">{sesion.asesor.nombre}</p>
             <p className="text-sm text-text-muted">{sesion.asesor.carrera} · Sem. {sesion.asesor.semestre}</p>
             {sesion.asesor.bio && (
               <p className="text-xs text-text-muted mt-1 line-clamp-2">{sesion.asesor.bio}</p>
@@ -52,9 +52,9 @@ export function SessionDetailModal({ sesion, onClose }: Props) {
             { label: 'Hora', value: formatTime(sesion.fechaHora) },
             { label: 'Duración', value: `${sesion.duracionMin} min` },
           ].map((item) => (
-            <div key={item.label} className="bg-gray-50 rounded-2xl p-3 text-center">
+            <div key={item.label} className="bg-surface-elevated border border-border-light rounded-2xl p-3 text-center">
               <p className="text-xs text-text-muted font-medium">{item.label}</p>
-              <p className="font-bold text-primary-dark text-sm mt-0.5">{item.value}</p>
+              <p className="font-bold text-white text-sm mt-0.5">{item.value}</p>
             </div>
           ))}
         </div>
@@ -62,10 +62,10 @@ export function SessionDetailModal({ sesion, onClose }: Props) {
         {/* Topics */}
         {sesion.temasAgenda.length > 0 && (
           <div>
-            <h3 className="font-bold text-primary-dark mb-2">Temas a tratar</h3>
+            <h3 className="font-bold text-white mb-2">Temas a tratar</h3>
             <div className="flex flex-wrap gap-2">
               {sesion.temasAgenda.map((t) => (
-                <span key={t} className="bg-accent-peach/60 text-primary-dark text-xs font-semibold px-3 py-1.5 rounded-full">
+                <span key={t} className="bg-primary-dark/20 text-primary-dark text-xs font-semibold px-3 py-1.5 rounded-full border border-primary-dark/30">
                   {t}
                 </span>
               ))}
@@ -73,18 +73,18 @@ export function SessionDetailModal({ sesion, onClose }: Props) {
           </div>
         )}
 
-        {/* Jitsi Meet link */}
+        {/* Meet link */}
         {sesion.linkMeet && isProgramada && (
           <div className="space-y-2">
             <a
               href={sesion.linkMeet}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl bg-[#2D1B4E] text-white font-bold text-sm hover:bg-[#3d2566] transition-colors"
+              className="flex items-center justify-center gap-2 w-full h-12 rounded-2xl bg-neon-green text-[#0A0A12] font-bold text-sm hover:brightness-105 transition-all shadow-neon"
             >
               <ExternalLink size={16} /> Unirse a la reunión
             </a>
-            <p className="text-[10px] text-center text-gray-400 break-all px-1">{sesion.linkMeet}</p>
+            <p className="text-[10px] text-center text-text-dim break-all px-1">{sesion.linkMeet}</p>
           </div>
         )}
 
@@ -92,14 +92,14 @@ export function SessionDetailModal({ sesion, onClose }: Props) {
         {isProgramada && (
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <CheckSquare size={16} className="text-primary-dark" />
-              <h3 className="font-bold text-primary-dark">Preparación</h3>
+              <CheckSquare size={16} className="text-neon-green" />
+              <h3 className="font-bold text-white">Preparación</h3>
             </div>
             <div className="space-y-2">
               {PREP_CHECKLIST.map((item) => (
                 <div key={item} className="flex items-start gap-2">
-                  <div className="w-4 h-4 rounded-full border-2 border-primary-dark/30 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-text-dark">{item}</p>
+                  <div className="w-4 h-4 rounded-full border-2 border-border-light mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-text-muted">{item}</p>
                 </div>
               ))}
             </div>
@@ -108,16 +108,16 @@ export function SessionDetailModal({ sesion, onClose }: Props) {
 
         {/* Observations (post-session) */}
         {sesion.observaciones && (
-          <div className="bg-primary-light rounded-2xl p-4">
-            <h3 className="font-bold text-primary-dark mb-2">Notas de la sesión</h3>
+          <div className="bg-surface-elevated border border-border-light rounded-2xl p-4">
+            <h3 className="font-bold text-white mb-2">Notas de la sesión</h3>
             {sesion.observaciones.notasImportantes && (
-              <p className="text-sm text-text-dark">{sesion.observaciones.notasImportantes}</p>
+              <p className="text-sm text-text-muted">{sesion.observaciones.notasImportantes}</p>
             )}
             {sesion.observaciones.compromisosProximaSemana.length > 0 && (
               <div className="mt-2">
                 <p className="text-xs font-bold text-text-muted uppercase tracking-wide mb-1">Compromisos</p>
                 {sesion.observaciones.compromisosProximaSemana.map((c) => (
-                  <p key={c} className="text-sm text-text-dark">• {c}</p>
+                  <p key={c} className="text-sm text-white">• {c}</p>
                 ))}
               </div>
             )}

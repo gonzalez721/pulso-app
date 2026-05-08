@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom'
-import { LayoutDashboard, CalendarDays, LogOut, GraduationCap } from 'lucide-react'
+import { LayoutDashboard, CalendarDays, LogOut } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAsesorStore } from '../../store/asesorStore'
 import { useAsesorLogout } from '../../hooks/useAsesor'
@@ -10,23 +10,26 @@ export function AsesorLayout() {
   const logout = useAsesorLogout()
 
   return (
-    <div className="min-h-screen bg-[#F4F1F9] flex flex-col max-w-lg mx-auto relative">
+    <div className="min-h-screen bg-[#0A0A12] flex flex-col max-w-lg mx-auto relative">
       {/* Top bar */}
-      <header className="bg-[#2D1B4E] text-white px-5 pt-12 pb-4 flex items-center justify-between">
+      <header className="bg-surface-raised border-b border-border-light px-5 pt-12 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center overflow-hidden">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-dark to-purple-900 flex items-center justify-center overflow-hidden shadow-glow">
             {asesor?.fotoUrl
               ? <img src={asesor.fotoUrl} className="w-full h-full object-cover" alt="" />
-              : <span className="text-sm font-bold">{getInitials(asesor?.nombre ?? 'A')}</span>
+              : <span className="text-sm font-bold text-white">{getInitials(asesor?.nombre ?? 'A')}</span>
             }
           </div>
           <div>
-            <p className="text-xs text-white/60 font-medium">Portal Asesor</p>
-            <p className="text-sm font-bold leading-tight">{asesor?.nombre ?? '...'}</p>
+            <p className="text-xs text-text-muted font-medium">Portal Asesor</p>
+            <p className="text-sm font-bold text-white leading-tight">{asesor?.nombre ?? '...'}</p>
           </div>
         </div>
-        <button onClick={logout} className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-          <LogOut size={14} />
+        <button
+          onClick={logout}
+          className="w-8 h-8 rounded-xl bg-surface-elevated border border-border-light flex items-center justify-center hover:border-red-500/40 hover:text-red-400 transition-colors"
+        >
+          <LogOut size={14} className="text-text-muted" />
         </button>
       </header>
 
@@ -35,28 +38,32 @@ export function AsesorLayout() {
       </main>
 
       {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white border-t border-gray-200 z-30">
-        <div className="flex">
-          {[
-            { to: '/asesor/dashboard', icon: LayoutDashboard, label: 'Inicio' },
-            { to: '/asesor/sesiones',  icon: CalendarDays,    label: 'Sesiones' },
-          ].map(({ to, icon: Icon, label }) => (
-            <NavLink key={to} to={to} className="flex-1 flex flex-col items-center gap-1 py-3 transition-colors">
-              {({ isActive }) => (
-                <>
-                  <div className="relative">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto z-30 pb-safe">
+        <div className="mx-4 mb-4">
+          <div className="bg-surface-raised border border-border-light rounded-3xl flex overflow-hidden shadow-glow">
+            {[
+              { to: '/asesor/dashboard', icon: LayoutDashboard, label: 'Inicio' },
+              { to: '/asesor/sesiones',  icon: CalendarDays,    label: 'Sesiones' },
+            ].map(({ to, icon: Icon, label }) => (
+              <NavLink key={to} to={to} className="flex-1 flex flex-col items-center gap-1 py-3 transition-colors relative">
+                {({ isActive }) => (
+                  <>
                     {isActive && (
-                      <motion.div layoutId="asesor-nav" className="absolute -inset-2 bg-[#F5E6E8] rounded-xl" />
+                      <motion.div
+                        layoutId="asesor-nav-pill"
+                        className="absolute inset-1 bg-surface-elevated rounded-2xl"
+                        transition={{ type: 'spring', damping: 30, stiffness: 350 }}
+                      />
                     )}
-                    <Icon size={22} className={`relative z-10 ${isActive ? 'text-[#2D1B4E]' : 'text-gray-400'}`} />
-                  </div>
-                  <span className={`text-[10px] font-semibold ${isActive ? 'text-[#2D1B4E]' : 'text-gray-400'}`}>
-                    {label}
-                  </span>
-                </>
-              )}
-            </NavLink>
-          ))}
+                    <Icon size={20} className={`relative z-10 transition-colors ${isActive ? 'text-neon-green' : 'text-text-muted'}`} />
+                    <span className={`text-[10px] font-bold relative z-10 transition-colors ${isActive ? 'text-neon-green' : 'text-text-muted'}`}>
+                      {label}
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
         </div>
       </nav>
     </div>

@@ -3,10 +3,10 @@ import { motion } from 'framer-motion'
 import { Button } from '../../../components/ui/Button'
 
 const OPTIONS = [
-  { key: 'SAVE_MORE', emoji: '🐷', label: 'Ahorrar más', desc: 'Quiero guardar dinero cada semana' },
-  { key: 'SPEND_SMARTER', emoji: '🧠', label: 'Gastar con inteligencia', desc: 'Quiero saber en qué gasto mi dinero' },
-  { key: 'STOP_IMPULSE', emoji: '🛑', label: 'Parar gastos impulsivos', desc: 'Compro cosas que luego me arrepiento' },
-  { key: 'LESS_STRESS', emoji: '😌', label: 'Menos estrés financiero', desc: 'El dinero me genera ansiedad' },
+  { key: 'SAVE_MORE',      emoji: '🐷', label: 'Ahorrar más',              desc: 'Quiero guardar dinero cada semana' },
+  { key: 'SPEND_SMARTER',  emoji: '🧠', label: 'Gastar con inteligencia',  desc: 'Quiero saber en qué gasto mi dinero' },
+  { key: 'STOP_IMPULSE',   emoji: '🛑', label: 'Parar gastos impulsivos',  desc: 'Compro cosas que luego me arrepiento' },
+  { key: 'LESS_STRESS',    emoji: '😌', label: 'Menos estrés financiero',  desc: 'El dinero me genera ansiedad' },
 ]
 
 export function ObjectiveStep({ onNext }: { onNext: (obj: string) => void }) {
@@ -19,7 +19,7 @@ export function ObjectiveStep({ onNext }: { onNext: (obj: string) => void }) {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h2 className="text-2xl font-extrabold font-display text-primary-dark">
+        <h2 className="text-2xl font-extrabold font-display text-white">
           ¿Cuál es tu objetivo principal?
         </h2>
         <p className="text-text-muted mt-1">Esto nos ayuda a personalizar tu experiencia</p>
@@ -36,22 +36,22 @@ export function ObjectiveStep({ onNext }: { onNext: (obj: string) => void }) {
             className={`
               w-full flex items-center gap-4 p-4 rounded-3xl border-2 text-left transition-all
               ${selected === opt.key
-                ? 'border-primary-dark bg-primary-dark text-white'
-                : 'border-border-light bg-white text-text-dark hover:border-primary-dark/30'
+                ? 'border-primary-dark bg-primary-dark/20 shadow-glow'
+                : 'border-border-light bg-surface-raised hover:border-primary-dark/40'
               }
             `}
           >
             <span className="text-3xl">{opt.emoji}</span>
             <div>
-              <p className={`font-bold ${selected === opt.key ? 'text-white' : 'text-primary-dark'}`}>
+              <p className={`font-bold ${selected === opt.key ? 'text-white' : 'text-white'}`}>
                 {opt.label}
               </p>
-              <p className={`text-sm mt-0.5 ${selected === opt.key ? 'text-white/70' : 'text-text-muted'}`}>
+              <p className={`text-sm mt-0.5 ${selected === opt.key ? 'text-text-muted' : 'text-text-muted'}`}>
                 {opt.desc}
               </p>
             </div>
             {selected === opt.key && (
-              <span className="ml-auto text-white text-xl">✓</span>
+              <span className="ml-auto text-neon-green text-xl">✓</span>
             )}
           </motion.button>
         ))}

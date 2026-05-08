@@ -23,8 +23,8 @@ export function ProgressCircle({
   const offset = circumference * (1 - pct)
   const isOver = value > max
 
-  const trackColor = '#F5E6E8'
-  const fillColor = isOver ? '#FF9B9B' : pct > 0.85 ? '#FFB347' : '#2D1B4E'
+  const trackColor = 'rgba(255,255,255,0.08)'
+  const fillColor = isOver ? '#FF6B6B' : pct > 0.85 ? '#F59E0B' : '#A8FF3E'
 
   return (
     <div className={`relative inline-flex items-center justify-center ${className}`}>
@@ -49,13 +49,16 @@ export function ProgressCircle({
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 0.6s ease, stroke 0.3s ease' }}
+          style={{
+            transition: 'stroke-dashoffset 0.6s ease, stroke 0.3s ease',
+            filter: `drop-shadow(0 0 6px ${fillColor}60)`,
+          }}
         />
       </svg>
       {(label || sublabel) && (
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           {label && (
-            <span className="text-2xl font-bold font-display text-primary-dark leading-none">
+            <span className="text-2xl font-bold font-display text-white leading-none">
               {label}
             </span>
           )}

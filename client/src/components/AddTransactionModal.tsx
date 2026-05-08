@@ -39,9 +39,7 @@ export function AddTransactionModal({ open, onClose }: Props) {
     mutate(
       { monto, categoria, descripcion: descripcion || undefined },
       {
-        onSuccess: () => {
-          handleClose()
-        },
+        onSuccess: () => handleClose(),
         onError: () => setError('Error al guardar. Intenta de nuevo.'),
       }
     )
@@ -53,7 +51,7 @@ export function AddTransactionModal({ open, onClose }: Props) {
         <AmountInput value={monto} onChange={setMonto} label="¿Cuánto gastaste?" />
 
         <div>
-          <label className="text-sm font-semibold text-text-dark mb-2 block">Categoría</label>
+          <label className="text-sm font-semibold text-white mb-2 block">Categoría</label>
           <div className="flex flex-wrap gap-2">
             {CATEGORIAS.map((c) => (
               <CategoryPill
@@ -74,7 +72,7 @@ export function AddTransactionModal({ open, onClose }: Props) {
         />
 
         {error && (
-          <p className="text-sm text-red-500 font-medium text-center">{error}</p>
+          <p className="text-sm text-red-400 font-medium text-center">{error}</p>
         )}
 
         <Button onClick={handleSubmit} loading={isPending} fullWidth size="lg">

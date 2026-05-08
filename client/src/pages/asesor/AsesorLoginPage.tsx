@@ -11,30 +11,33 @@ export function AsesorLoginPage() {
   const { mutate, isPending, error } = useAsesorLogin()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2D1B4E] to-[#4A2D7A] flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-[#0A0A12] flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      {/* Glows */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-dark/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-64 h-64 bg-neon-green/5 rounded-full blur-3xl pointer-events-none" />
+
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm"
+        className="w-full max-w-sm relative z-10"
       >
         {/* Logo */}
         <div className="text-center mb-10">
-          <div className="w-20 h-20 rounded-[1.8rem] bg-white/10 border border-white/20 flex items-center justify-center mx-auto mb-4 shadow-float backdrop-blur">
+          <div className="w-20 h-20 rounded-[1.8rem] bg-gradient-to-br from-primary-dark to-purple-900 flex items-center justify-center mx-auto mb-4 shadow-glow">
             <span className="text-4xl">🎓</span>
           </div>
           <h1 className="text-3xl font-extrabold font-display text-white">Portal Asesor</h1>
-          <p className="text-white/60 mt-1 text-sm">PULSO — Acompañamiento Financiero</p>
+          <p className="text-text-muted mt-1 text-sm">PULSO — Acompañamiento Financiero</p>
         </div>
 
         {/* Form */}
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-3xl p-6 space-y-4">
+        <div className="bg-surface-raised border border-border-light rounded-3xl p-6 space-y-4">
           <Input
             label="Email institucional"
             type="email"
             placeholder="tu@pulso.app"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-white/90"
             autoComplete="email"
           />
           <Input
@@ -43,12 +46,11 @@ export function AsesorLoginPage() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="bg-white/90"
             autoComplete="current-password"
           />
 
           {error && (
-            <p className="text-red-300 text-sm font-medium text-center">
+            <p className="text-red-400 text-sm font-medium text-center">
               Credenciales incorrectas. Intenta de nuevo.
             </p>
           )}
@@ -59,21 +61,21 @@ export function AsesorLoginPage() {
             disabled={!email || !password}
             fullWidth
             size="lg"
-            className="bg-white text-primary-dark hover:bg-primary-light mt-2"
+            className="mt-2"
           >
             Ingresar al portal
           </Button>
         </div>
 
         {/* Demo hint */}
-        <div className="mt-4 text-center">
-          <p className="text-white/40 text-xs">
+        <div className="mt-4 bg-surface-elevated border border-border-light rounded-2xl p-3 text-center">
+          <p className="text-text-dim text-xs">
             Demo: sofia.ramirez@pulso.app / asesor1234
           </p>
         </div>
 
         <div className="mt-6 text-center">
-          <Link to="/login" className="text-white/50 text-xs hover:text-white/80 transition-colors">
+          <Link to="/login" className="text-text-muted text-xs hover:text-white transition-colors">
             ← Volver al portal estudiante
           </Link>
         </div>

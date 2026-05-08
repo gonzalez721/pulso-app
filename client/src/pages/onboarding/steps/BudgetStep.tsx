@@ -11,7 +11,7 @@ export function BudgetStep({ onNext }: { onNext: (budget: number) => void }) {
   return (
     <div className="flex flex-col min-h-screen px-6 pt-4 pb-8">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h2 className="text-2xl font-extrabold font-display text-primary-dark">
+        <h2 className="text-2xl font-extrabold font-display text-white">
           ¿Cuánto quieres gastar por semana?
         </h2>
         <p className="text-text-muted mt-1">
@@ -37,8 +37,8 @@ export function BudgetStep({ onNext }: { onNext: (budget: number) => void }) {
                 className={`
                   px-4 py-2 rounded-2xl text-sm font-bold border-2 transition-all
                   ${budget === p
-                    ? 'bg-primary-dark border-primary-dark text-white'
-                    : 'bg-white border-border-light text-text-dark hover:border-primary-dark/40'
+                    ? 'bg-neon-green border-neon-green text-[#0A0A12] shadow-neon'
+                    : 'bg-surface-elevated border-border-light text-white hover:border-neon-green/40'
                   }
                 `}
               >
@@ -48,8 +48,10 @@ export function BudgetStep({ onNext }: { onNext: (budget: number) => void }) {
           </div>
         </div>
 
-        <div className="bg-accent-peach/40 rounded-2xl p-4">
-          <p className="text-sm text-primary-dark font-medium">
+        <div className="bg-surface-elevated border border-border-light rounded-2xl p-4"
+          style={{ borderColor: 'rgba(168,255,62,0.2)', background: 'rgba(168,255,62,0.05)' }}
+        >
+          <p className="text-sm text-text-muted font-medium">
             💡 El promedio de un estudiante universitario gasta entre $600–$900 por semana.
           </p>
         </div>

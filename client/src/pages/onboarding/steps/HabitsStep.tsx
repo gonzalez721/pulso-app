@@ -3,12 +3,12 @@ import { motion } from 'framer-motion'
 import { Button } from '../../../components/ui/Button'
 
 const OPTIONS = [
-  { key: 'impulse_spending', emoji: '🛒', label: 'Gastos impulsivos', desc: 'Compro sin pensar' },
-  { key: 'tracking', emoji: '📊', label: 'Llevar registro', desc: 'No sé cuánto gasto' },
-  { key: 'saving', emoji: '💰', label: 'Ahorrar consistente', desc: 'No logro ahorrar' },
-  { key: 'food', emoji: '🍕', label: 'Gasto en comida', desc: 'Como mucho fuera de casa' },
-  { key: 'entertainment', emoji: '🎮', label: 'Entretenimiento', desc: 'Suscripciones y salidas' },
-  { key: 'anxiety', emoji: '😰', label: 'Ansiedad financiera', desc: 'El dinero me estresa' },
+  { key: 'impulse_spending', emoji: '🛒', label: 'Gastos impulsivos',    desc: 'Compro sin pensar' },
+  { key: 'tracking',         emoji: '📊', label: 'Llevar registro',      desc: 'No sé cuánto gasto' },
+  { key: 'saving',           emoji: '💰', label: 'Ahorrar consistente',  desc: 'No logro ahorrar' },
+  { key: 'food',             emoji: '🍕', label: 'Gasto en comida',      desc: 'Como mucho fuera de casa' },
+  { key: 'entertainment',    emoji: '🎮', label: 'Entretenimiento',      desc: 'Suscripciones y salidas' },
+  { key: 'anxiety',          emoji: '😰', label: 'Ansiedad financiera',  desc: 'El dinero me estresa' },
 ]
 
 export function HabitsStep({ onNext }: { onNext: (difs: string[]) => void }) {
@@ -20,7 +20,7 @@ export function HabitsStep({ onNext }: { onNext: (difs: string[]) => void }) {
   return (
     <div className="flex flex-col min-h-screen px-6 pt-4 pb-8">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h2 className="text-2xl font-extrabold font-display text-primary-dark">
+        <h2 className="text-2xl font-extrabold font-display text-white">
           ¿Con qué luchas más?
         </h2>
         <p className="text-text-muted mt-1">Selecciona todo lo que aplique</p>
@@ -39,18 +39,17 @@ export function HabitsStep({ onNext }: { onNext: (difs: string[]) => void }) {
               className={`
                 flex flex-col items-start p-4 rounded-3xl border-2 text-left transition-all
                 ${isSelected
-                  ? 'border-primary-dark bg-primary-dark text-white'
-                  : 'border-border-light bg-white text-text-dark hover:border-primary-dark/30'
+                  ? 'border-primary-dark bg-primary-dark/20 shadow-glow'
+                  : 'border-border-light bg-surface-raised hover:border-primary-dark/40'
                 }
               `}
             >
               <span className="text-2xl mb-2">{opt.emoji}</span>
-              <p className={`font-bold text-sm ${isSelected ? 'text-white' : 'text-primary-dark'}`}>
-                {opt.label}
-              </p>
-              <p className={`text-xs mt-0.5 ${isSelected ? 'text-white/70' : 'text-text-muted'}`}>
-                {opt.desc}
-              </p>
+              <p className="font-bold text-sm text-white">{opt.label}</p>
+              <p className="text-xs mt-0.5 text-text-muted">{opt.desc}</p>
+              {isSelected && (
+                <span className="mt-2 text-xs font-bold text-neon-green">✓ Seleccionado</span>
+              )}
             </motion.button>
           )
         })}

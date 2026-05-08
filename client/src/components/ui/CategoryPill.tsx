@@ -20,11 +20,14 @@ export function CategoryPill({ categoria, selected, onClick, size = 'md' }: Cate
         inline-flex items-center gap-1.5 rounded-full font-semibold transition-all
         ${size === 'sm' ? 'px-3 py-1 text-xs' : 'px-4 py-2 text-sm'}
         ${selected
-          ? 'bg-primary-dark text-white shadow-soft'
-          : 'text-text-dark hover:bg-opacity-80'
+          ? 'text-[#0A0A12] shadow-neon'
+          : 'text-white border border-border-light hover:border-opacity-80'
         }
       `}
-      style={!selected ? { backgroundColor: color + '60', border: `1.5px solid ${color}` } : {}}
+      style={selected
+        ? { backgroundColor: color, boxShadow: `0 0 12px ${color}60` }
+        : { backgroundColor: color + '18', borderColor: color + '50' }
+      }
     >
       <span>{emoji}</span>
       <span>{cat?.label ?? categoria}</span>

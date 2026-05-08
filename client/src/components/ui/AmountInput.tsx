@@ -35,10 +35,10 @@ export function AmountInput({
 
   return (
     <div className="flex flex-col gap-1.5">
-      {label && <label className="text-sm font-semibold text-text-dark">{label}</label>}
+      {label && <label className="text-sm font-semibold text-white">{label}</label>}
       <div
         className={`
-          relative flex items-center h-16 rounded-2xl border bg-white transition-all cursor-text
+          relative flex items-center h-16 rounded-2xl border bg-surface-elevated transition-all cursor-text
           ${focused ? 'border-primary-dark ring-2 ring-primary-dark/20' : 'border-border-light'}
         `}
         onClick={() => inputRef.current?.focus()}
@@ -55,7 +55,7 @@ export function AmountInput({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           placeholder={placeholder}
-          className="w-full h-full bg-transparent pl-8 pr-4 text-2xl font-bold text-primary-dark focus:outline-none placeholder:text-text-muted/40"
+          className="w-full h-full bg-transparent pl-8 pr-4 text-2xl font-bold text-white focus:outline-none placeholder:text-text-dim"
         />
         <span className="absolute right-4 text-sm font-semibold text-text-muted pointer-events-none">
           {currency}
