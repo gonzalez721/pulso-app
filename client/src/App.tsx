@@ -12,6 +12,7 @@ import { WeeklyWrapPage } from './pages/weekly/WeeklyWrapPage'
 import { SessionsPage } from './pages/sessions/SessionsPage'
 import { ProfilePage } from './pages/profile/ProfilePage'
 import { MoodCheckinPage } from './pages/mood/MoodCheckinPage'
+import { LandingPage } from './pages/LandingPage'
 import { AsesorLoginPage } from './pages/asesor/AsesorLoginPage'
 import { AsesorRegisterPage } from './pages/asesor/AsesorRegisterPage'
 import { AsesorDashboard } from './pages/asesor/AsesorDashboard'
@@ -36,6 +37,15 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 function RequireAsesorAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAsesorStore()
   return isAuthenticated ? <>{children}</> : <Navigate to="/asesor/login" replace />
+}
+
+// Si ya estás logueado te manda directo, si no muestra la landing
+function SmartHome() {
+  const { isAuthenticated: isStudent } = useAuthStore()
+  const { isAuthenticated: isMentor } = useAsesorStore()
+  if (isMentor) return <Navigate to="/asesor/dashboard" replace />
+  if (isStudent) return <Navigate to="/dashboard" replace />
+  return <LandingPage />
 }
 
 function RequireOnboarding({ children }: { children: React.ReactNode }) {
@@ -97,9 +107,9 @@ export default function App() {
             <Route path="sesion/:sesionId" element={<AsesorSesionDetail />} />
           </Route>
 
-          {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          {/* Landing — entrada unificada */}
+          <Route path="/" element={<SmartHome />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
