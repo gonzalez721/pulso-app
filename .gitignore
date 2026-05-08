@@ -5,8 +5,7 @@ build/
 .env.local
 *.env
 
-# Prisma
-server/prisma/migrations/
+# Prisma — migrations must be tracked for production deploys (Render uses prisma migrate deploy)
 
 # Logs
 *.log
