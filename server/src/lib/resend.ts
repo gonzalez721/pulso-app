@@ -10,7 +10,7 @@ function getResend(): Resend {
   return _resend
 }
 
-const FROM = 'PULSO <onboarding@resend.dev>'
+const FROM = 'PULSO <no-reply@pulsopacto.online>'
 
 // ─── Helper ─────────────────────────────────────────────────────────────────
 
