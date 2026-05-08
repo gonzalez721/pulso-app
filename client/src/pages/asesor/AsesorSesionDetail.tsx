@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -35,10 +35,20 @@ export function AsesorSesionDetail() {
   const { mutate: saveObs, isPending: saving } = useSaveObservacion()
 
   const [showObsForm, setShowObsForm]   = useState(false)
-  const [temas,         setTemas]       = useState<string[]>(sesion?.observaciones?.temasDiscutidos ?? [])
-  const [patrones,      setPatrones]    = useState<string[]>(sesion?.observaciones?.patronesIdentificados ?? [])
-  const [compromisos,   setCompromisos] = useState<string[]>(sesion?.observaciones?.compromisosProximaSemana ?? [])
-  const [notas,         setNotas]       = useState(sesion?.observaciones?.notasImportantes ?? '')
+  const [temas,         setTemas]       = useState<string[]>([])
+  const [patrones,      setPatrones]    = useState<string[]>([])
+  const [compromisos,   setCompromisos] = useState<string[]>([])
+  const [notas,         setNotas]       = useState('')
+
+  // Sync form when observation data arrives (e.g. after query loads or invalidation)
+  useEffect(() => {
+    if (sesion?.observaciones) {
+      setTemas(sesion.observaciones.temasDiscutidos ?? [])
+      setPatrones(sesion.observaciones.patronesIdentificados ?? [])
+      setCompromisos(sesion.observaciones.compromisosProximaSemana ?? [])
+      setNotas(sesion.observaciones.notasImportantes ?? '')
+    }
+  }, [sesion?.observaciones])
   const [newTema,       setNewTema]     = useState('')
   const [newPatron,     setNewPatron]   = useState('')
   const [newCompromiso, setNewCompromiso] = useState('')
@@ -343,7 +353,15 @@ export function AsesorSesionDetail() {
             {sesion.observaciones.notasImportantes && (
               <p className="text-sm text-text-muted mb-3">{sesion.observaciones.notasImportantes}</p>
             )}
-            {sesion.observaciones.compromisosProximaSemana.length > 0 && (
+            {sesion.observaciones.temasDiscutidos?.length > 0 && (
+              <div className="bg-surface-elevated border border-border-light rounded-2xl p-3 mb-2">
+                <p className="text-xs font-bold text-text-muted uppercase tracking-wide mb-2">Temas discutidos</p>
+                {sesion.observaciones.temasDiscutidos.map((c: string) => (
+                  <p key={c} className="text-sm text-white">• {c}</p>
+                ))}
+              </div>
+            )}
+            {sesion.observaciones.compromisosProximaSemana?.length > 0 && (
               <div className="bg-surface-elevated border border-border-light rounded-2xl p-3">
                 <p className="text-xs font-bold text-text-muted uppercase tracking-wide mb-2">Compromisos</p>
                 {sesion.observaciones.compromisosProximaSemana.map((c: string) => (
@@ -355,11 +373,11 @@ export function AsesorSesionDetail() {
               Editar notas
             </button>
           </Card>
-        ) : isPending ? (
+        ) : (
           <Button onClick={() => setShowObsForm(true)} variant="secondary" fullWidth size="lg">
-            📝 Registrar notas de sesión
+            📝 {isPending ? 'Registrar notas de sesión' : 'Agregar notas'}
           </Button>
-        ) : null}
+        )}
 
         {/* Observations form */}
         <AnimatePresence>
