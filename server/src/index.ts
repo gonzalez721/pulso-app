@@ -58,24 +58,6 @@ app.use(express.urlencoded({ extended: true }))
 // Health check
 app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
 
-// Temporary email diagnostic
-app.get('/debug-email', async (_req, res) => {
-  try {
-    const { Resend } = await import('resend')
-    const key = process.env.RESEND_API_KEY
-    if (!key) { res.json({ error: 'RESEND_API_KEY not set' }); return }
-    const resend = new Resend(key)
-    const result = await resend.emails.send({
-      from: 'PULSO <no-reply@pulsopacto.online>',
-      to: ['A2gtr721@gmail.com'],
-      subject: 'Debug test',
-      html: '<p>Debug desde Render</p>',
-    })
-    res.json({ key_prefix: key.substring(0, 12) + '...', result })
-  } catch (err: any) {
-    res.json({ error: err.message, stack: err.stack?.substring(0, 200) })
-  }
-})
 
 // Routes
 app.use('/api/auth', authLimiter, authRoutes)
