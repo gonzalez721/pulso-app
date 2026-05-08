@@ -23,9 +23,6 @@ import { AsesorCalendarioPage } from './pages/asesor/AsesorCalendarioPage'
 import { AsesorEstudianteHistoria } from './pages/asesor/AsesorEstudianteHistoria'
 import { VerifyCodePage, AsesorVerifyCodePage } from './pages/VerifyCodePage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
-import { PactoSetupPage } from './pages/pacto/PactoSetupPage'
-import { PactoInvitacionPage } from './pages/pacto/PactoInvitacionPage'
-import { PactoResponderPage } from './pages/pacto/PactoResponderPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -98,12 +95,7 @@ export default function App() {
             <Route path="/sessions" element={<SessionsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/mood" element={<MoodCheckinPage />} />
-            <Route path="/pacto" element={<PactoSetupPage />} />
           </Route>
-
-          {/* PACTO public pages — no auth required */}
-          <Route path="/pacto/invitacion" element={<PactoInvitacionPage />} />
-          <Route path="/pacto/responder" element={<PactoResponderPage />} />
 
           {/* Asesor portal */}
           <Route path="/asesor/login" element={<AsesorLoginPage />} />

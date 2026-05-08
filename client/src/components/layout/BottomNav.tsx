@@ -1,11 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, TrendingUp, CalendarDays, User, Shield } from 'lucide-react'
+import { LayoutDashboard, TrendingUp, CalendarDays, User } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 const links = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Inicio' },
   { to: '/weekly', icon: TrendingUp, label: 'Semana' },
-  { to: '/pacto', icon: Shield, label: 'PACTO' },
   { to: '/sessions', icon: CalendarDays, label: 'Sesiones' },
   { to: '/profile', icon: User, label: 'Perfil' },
 ]

@@ -1,13 +1,5 @@
 import 'dotenv/config'
-import { execSync } from 'child_process'
 import express from 'express'
-
-// Run pending migrations on startup
-try {
-  execSync('npx prisma migrate deploy', { stdio: 'inherit' })
-} catch (e) {
-  console.error('[prisma] migrate deploy failed:', e)
-}
 import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
@@ -21,7 +13,6 @@ import sesionRoutes from './routes/sesiones'
 import insightRoutes from './routes/insights'
 import moodRoutes from './routes/mood'
 import asesorRoutes from './routes/asesor'
-import pactoRoutes from './routes/pacto'
 import { errorHandler, notFound } from './middleware/errorHandler'
 import { sendVerificationEmail } from './lib/resend'
 
@@ -68,19 +59,6 @@ app.use(express.urlencoded({ extended: true }))
 // Health check
 app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
 
-// DB diagnostic — check if PACTO tables exist
-app.get('/health/db', async (_req, res) => {
-  try {
-    const { prisma } = await import('./lib/prisma')
-    const [pactoCount, alertaCount] = await Promise.all([
-      prisma.$queryRaw`SELECT COUNT(*) FROM "PactoRelacion"`,
-      prisma.$queryRaw`SELECT COUNT(*) FROM "PactoAlerta"`,
-    ])
-    res.json({ tablas: { PactoRelacion: true, PactoAlerta: true }, pactoCount, alertaCount })
-  } catch (e: any) {
-    res.status(500).json({ tablas: { error: e.message } })
-  }
-})
 
 // Email diagnostic — call GET /health/email?to=you@example.com to test Resend
 app.get('/health/email', async (req, res) => {
@@ -111,7 +89,6 @@ app.use('/api/sesiones', sesionRoutes)
 app.use('/api/insights', insightRoutes)
 app.use('/api/mood', moodRoutes)
 app.use('/api/asesor', asesorRoutes)
-app.use('/api/pacto', pactoRoutes)
 
 // Error handling
 app.use(notFound)

@@ -1,8 +1,6 @@
 import { Response } from 'express'
 import { AuthRequest } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
-import { evaluarRiesgo, generarMensajeAuto } from '../lib/riskDetection'
-import { triggerPactoAlerta } from './pactoController'
 
 export async function createTransaccion(req: AuthRequest, res: Response): Promise<void> {
   const { monto, categoria, descripcion, fecha, metodoPago, comprobante } = req.body
@@ -42,38 +40,7 @@ export async function createTransaccion(req: AuthRequest, res: Response): Promis
     })
   }
 
-  // ── PACTO risk analysis (non-blocking) ─────────────────────────────────────
-  let pactoData: { riesgoDetectado: boolean; alertaId?: string; contexto?: any; mensajeAuto?: string } = {
-    riesgoDetectado: false,
-  }
-
-  try {
-    const pacto = await prisma.pactoRelacion.findUnique({ where: { userId: req.userId! } })
-    if (pacto?.estado === 'activo') {
-      const riskResult = await evaluarRiesgo(req.userId!, Number(monto), categoria, descripcion)
-
-      if (riskResult.esRiesgo) {
-        const user = await prisma.user.findUnique({
-          where: { id: req.userId! },
-          select: { nombre: true },
-        })
-        const mensajeAuto = generarMensajeAuto(riskResult, user?.nombre ?? 'tú', pacto.modo === 'ia' ? 'ia' : 'auto_partner')
-        const triggered   = await triggerPactoAlerta(req.userId!, user?.nombre ?? 'tú', riskResult, mensajeAuto)
-
-        pactoData = {
-          riesgoDetectado: true,
-          alertaId:   triggered?.alertaId,
-          contexto:   riskResult.contexto,
-          mensajeAuto,
-        }
-      }
-    }
-  } catch (err) {
-    console.error('[PACTO] risk analysis error:', err)
-    // Fail silently — don't block the transaction
-  }
-
-  res.status(201).json({ transaccion, pacto: pactoData })
+  res.status(201).json({ transaccion })
 }
 
 export async function getTransacciones(req: AuthRequest, res: Response): Promise<void> {
