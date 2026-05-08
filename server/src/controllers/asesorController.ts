@@ -456,3 +456,90 @@ export async function updateSesionStatus(req: AsesorRequest, res: Response): Pro
 
   res.json(updated)
 }
+
+// ─── Historia clínica completa del estudiante ─────────────────────────────
+
+export async function getEstudianteHistoria(req: AsesorRequest, res: Response): Promise<void> {
+  const { userId } = req.params
+
+  // Verify the asesor has at least one session with this student
+  const sesionRelacion = await prisma.sesion.findFirst({
+    where: { asesorId: req.asesorId!, userId },
+  })
+  if (!sesionRelacion) {
+    res.status(403).json({ error: 'No tienes sesiones con este estudiante' }); return
+  }
+
+  const [student, todasSesiones] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true, nombre: true, email: true, universidad: true,
+        semestre: true, mensualidadMensual: true, createdAt: true,
+        appsPago: true,
+        perfil: {
+          select: {
+            objetivo: true, resumenIA: true, categoriasGasto: true,
+            dificultadesReportadas: true,
+          },
+        },
+      },
+    }),
+    // All sessions this asesor has with the student (all states)
+    prisma.sesion.findMany({
+      where: { asesorId: req.asesorId!, userId },
+      include: { observaciones: true },
+      orderBy: { fechaHora: 'asc' },
+    }),
+  ])
+
+  if (!student) { res.status(404).json({ error: 'Estudiante no encontrado' }); return }
+
+  // Aggregate patterns and commitments across all sessions
+  const allPatrones: string[]  = []
+  const allCompromisos: string[] = []
+  const allTemas: string[]     = []
+
+  for (const s of todasSesiones) {
+    if (s.observaciones) {
+      allPatrones.push(...s.observaciones.patronesIdentificados)
+      allCompromisos.push(...s.observaciones.compromisosProximaSemana)
+      allTemas.push(...s.observaciones.temasDiscutidos)
+    }
+  }
+
+  // Frequency map for recurrent patterns
+  const patronFrecuencia: Record<string, number> = {}
+  for (const p of allPatrones) {
+    patronFrecuencia[p] = (patronFrecuencia[p] ?? 0) + 1
+  }
+  const patronesRecurrentes = Object.entries(patronFrecuencia)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([patron, veces]) => ({ patron, veces }))
+
+  const temaFrecuencia: Record<string, number> = {}
+  for (const t of allTemas) {
+    temaFrecuencia[t] = (temaFrecuencia[t] ?? 0) + 1
+  }
+  const temasRecurrentes = Object.entries(temaFrecuencia)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([tema, veces]) => ({ tema, veces }))
+
+  const completadas = todasSesiones.filter((s) => s.estado === 'completada')
+  const conNotas    = todasSesiones.filter((s) => s.observaciones !== null)
+
+  res.json({
+    student,
+    sesiones: todasSesiones,
+    resumen: {
+      totalSesiones: todasSesiones.length,
+      sesionesCompletadas: completadas.length,
+      sesionesConNotas: conNotas.length,
+      patronesRecurrentes,
+      temasRecurrentes,
+      totalCompromisos: allCompromisos.length,
+    },
+  })
+}

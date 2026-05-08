@@ -73,6 +73,9 @@ export const asesorEndpoints = {
   getEstudianteStats: (userId: string) =>
     asesorApi.get(`/estudiante/${userId}/stats`),
 
+  getEstudianteHistoria: (userId: string) =>
+    asesorApi.get(`/estudiante/${userId}/historia`),
+
   saveObservacion: (sesionId: string, data: {
     temasDiscutidos: string[]
     patronesIdentificados: string[]

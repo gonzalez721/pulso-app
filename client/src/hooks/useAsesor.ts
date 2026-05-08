@@ -74,10 +74,20 @@ export function useAsesorSesiones(estado?: string) {
 export function useEstudianteStats(userId: string | null) {
   const { isAuthenticated } = useAsesorStore()
   return useQuery({
-    queryKey: ['asesor', 'estudiante', userId],
+    queryKey: ['asesor', 'estudiante', userId, 'stats'],
     queryFn: () => asesorEndpoints.getEstudianteStats(userId!).then((r) => r.data),
     enabled: isAuthenticated && !!userId,
     staleTime: 2 * 60 * 1000,
+  })
+}
+
+export function useEstudianteHistoria(userId: string | null) {
+  const { isAuthenticated } = useAsesorStore()
+  return useQuery({
+    queryKey: ['asesor', 'estudiante', userId, 'historia'],
+    queryFn: () => asesorEndpoints.getEstudianteHistoria(userId!).then((r) => r.data),
+    enabled: isAuthenticated && !!userId,
+    staleTime: 60 * 1000,
   })
 }
 

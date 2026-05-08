@@ -4,7 +4,7 @@ import {
   asesorVerifyCode, asesorResendVerification,
   asesorForgotPassword, asesorResetPassword,
   getAsesorProfile, getAsesorSesiones,
-  getEstudianteStats, saveObservacion,
+  getEstudianteStats, getEstudianteHistoria, saveObservacion,
   updateDisponibilidad, updateSesionStatus,
 } from '../controllers/asesorController'
 import { requireAsesorAuth } from '../middleware/asesorAuth'
@@ -25,6 +25,7 @@ router.get('/me',                                    requireAsesorAuth, getAseso
 router.patch('/disponibilidad',                      requireAsesorAuth, updateDisponibilidad)
 router.get('/sesiones',                              requireAsesorAuth, getAsesorSesiones)
 router.get('/estudiante/:userId/stats',              requireAsesorAuth, getEstudianteStats)
+router.get('/estudiante/:userId/historia',          requireAsesorAuth, getEstudianteHistoria)
 router.post('/sesiones/:sesionId/observacion',       requireAsesorAuth, saveObservacion)
 router.patch('/sesiones/:sesionId/status',           requireAsesorAuth, updateSesionStatus)
 

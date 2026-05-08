@@ -6,7 +6,7 @@ import {
 } from 'recharts'
 import {
   ArrowLeft, Video, AlertTriangle, Info, CheckCircle,
-  TrendingUp, DollarSign, Target, Save, ChevronDown, ChevronUp, Plus, X, Copy, Check,
+  TrendingUp, DollarSign, Target, Save, ChevronDown, ChevronUp, Plus, X, Copy, Check, ClipboardList,
 } from 'lucide-react'
 import { useAsesorSesiones, useEstudianteStats, useSaveObservacion } from '../../hooks/useAsesor'
 import { Button } from '../../components/ui/Button'
@@ -108,6 +108,16 @@ export function AsesorSesionDetail() {
             <p className="text-text-muted text-sm">{student?.universidad}{student?.semestre ? ` · Sem. ${student.semestre}` : ''}</p>
             <p className="text-text-dim text-xs mt-1">{student?.email}</p>
           </div>
+          {student?.id && (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate(`/asesor/estudiante/${student.id}/historia`)}
+              className="flex-shrink-0 flex flex-col items-center gap-0.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl px-3 py-2 transition-colors"
+            >
+              <ClipboardList size={18} className="text-neon-green" />
+              <span className="text-[9px] font-bold text-white/70 uppercase tracking-wide leading-none">Historia</span>
+            </motion.button>
+          )}
         </div>
 
         {/* Session time + status */}
