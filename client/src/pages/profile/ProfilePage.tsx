@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { LogOut, ChevronRight, Target, Bell, HelpCircle } from 'lucide-react'
+import { LogOut, ChevronRight, Target, Bell, HelpCircle, Shield } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useLogout, useProfile } from '../../hooks/useAuth'
 import { useActiveMetas, useCreateMeta } from '../../hooks/useTransacciones'
+import { usePactoStatus } from '../../hooks/usePacto'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { AmountInput } from '../../components/ui/AmountInput'
@@ -11,9 +13,11 @@ import { Modal } from '../../components/ui/Modal'
 import { formatCurrency, getWeekStart, getWeekEnd } from '../../lib/utils'
 
 export function ProfilePage() {
+  const navigate = useNavigate()
   const { user } = useAuthStore()
   const { data: profile } = useProfile()
   const { data: metas } = useActiveMetas()
+  const { data: pactoStatus } = usePactoStatus()
   const { mutate: logout, isPending: loggingOut } = useLogout()
   const { mutate: createMeta, isPending: creatingMeta } = useCreateMeta()
   const [showBudgetModal, setShowBudgetModal] = useState(false)
@@ -122,6 +126,48 @@ export function ProfilePage() {
           </div>
         )}
       </Card>
+
+      {/* PACTO card */}
+      <motion.button
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => navigate('/pacto')}
+        className="w-full text-left rounded-3xl p-4 flex items-center gap-4"
+        style={{
+          background: pactoStatus?.activo
+            ? 'rgba(168,255,62,0.07)'
+            : 'rgba(124,77,255,0.08)',
+          border: pactoStatus?.activo
+            ? '1px solid rgba(168,255,62,0.22)'
+            : '1px solid rgba(124,77,255,0.22)',
+        }}
+      >
+        <div
+          className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+          style={{
+            background: pactoStatus?.activo ? 'rgba(168,255,62,0.12)' : 'rgba(124,77,255,0.15)',
+          }}
+        >
+          <Shield size={19} className={pactoStatus?.activo ? 'text-neon-green' : 'text-primary-dark'} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-white text-sm">PACTO</p>
+          <p className="text-xs text-text-muted mt-0.5">
+            {pactoStatus?.activo
+              ? pactoStatus.modo === 'humano'
+                ? `Partner: ${pactoStatus.partnerNombre ?? 'esperando confirmación…'}`
+                : 'Modo IA activo'
+              : 'Activa tu sistema de responsabilidad financiera'
+            }
+          </p>
+        </div>
+        {pactoStatus?.activo && (
+          <div className="w-2 h-2 rounded-full bg-neon-green animate-pulse flex-shrink-0" />
+        )}
+        <ChevronRight size={16} className="text-text-muted flex-shrink-0" />
+      </motion.button>
 
       {/* Settings items */}
       <Card animate padding="none">

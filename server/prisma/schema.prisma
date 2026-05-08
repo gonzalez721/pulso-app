@@ -26,6 +26,8 @@ model User {
   metas         Meta[]
   sesiones      Sesion[]
   moodCheckins  MoodCheckin[]
+  pacto         PactoRelacion?
+  pactoAlertas  PactoAlerta[]
 }
 
 model PerfilFinanciero {
@@ -142,6 +144,49 @@ model RefreshToken {
 
   @@index([userId])
 }
+
+// ─── PACTO ────────────────────────────────────────────────────────────────────
+
+model PactoRelacion {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  modo             String    @default("humano")   // 'humano' | 'ia'
+  partnerNombre    String?
+  partnerEmail     String?
+  pushSubscription Json?                          // WebPush PushSubscription JSON
+  inviteToken      String    @unique @default(cuid())
+  estado           String    @default("pendiente") // 'pendiente' | 'activo' | 'pausado'
+  activadoEn       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  alertas          PactoAlerta[]
+
+  @@index([inviteToken])
+}
+
+model PactoAlerta {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  pactoId        String
+  pacto          PactoRelacion @relation(fields: [pactoId], references: [id])
+  tiposRiesgo    String[]
+  puntuacion     Float
+  contexto       Json
+  estado         String   @default("esperando") // 'esperando' | 'respondida' | 'timeout' | 'auto'
+  mensajePartner String?
+  mensajeAuto    String?
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([pactoId])
+  @@index([expiresAt])
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 
 model VerificationToken {
   id        String   @id @default(cuid())
