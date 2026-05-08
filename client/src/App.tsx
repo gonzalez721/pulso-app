@@ -19,6 +19,7 @@ import { AsesorDashboard } from './pages/asesor/AsesorDashboard'
 import { AsesorSesionesPage } from './pages/asesor/AsesorSesionesPage'
 import { AsesorSesionDetail } from './pages/asesor/AsesorSesionDetail'
 import { AsesorDisponibilidadPage } from './pages/asesor/AsesorDisponibilidadPage'
+import { AsesorCalendarioPage } from './pages/asesor/AsesorCalendarioPage'
 import { VerifyCodePage, AsesorVerifyCodePage } from './pages/VerifyCodePage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 
@@ -112,6 +113,7 @@ export default function App() {
             <Route path="dashboard" element={<AsesorDashboard />} />
             <Route path="sesiones" element={<AsesorSesionesPage />} />
             <Route path="sesion/:sesionId" element={<AsesorSesionDetail />} />
+            <Route path="calendario" element={<AsesorCalendarioPage />} />
             <Route path="disponibilidad" element={<AsesorDisponibilidadPage />} />
           </Route>
 

@@ -81,6 +81,15 @@ export function useEstudianteStats(userId: string | null) {
   })
 }
 
+export function useUpdateSesionStatus() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ sesionId, estado }: { sesionId: string; estado: 'completada' | 'cancelada' | 'aplazada' }) =>
+      asesorEndpoints.updateSesionStatus(sesionId, estado).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['asesor', 'sesiones'] }),
+  })
+}
+
 export function useSaveObservacion() {
   const qc = useQueryClient()
   return useMutation({

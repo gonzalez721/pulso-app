@@ -1,5 +1,5 @@
-import { Outlet, NavLink } from 'react-router-dom'
-import { LayoutDashboard, CalendarDays, Clock, LogOut } from 'lucide-react'
+import { Outlet, NavLink, Navigate } from 'react-router-dom'
+import { LayoutDashboard, CalendarDays, Clock, LogOut, Calendar } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAsesorStore } from '../../store/asesorStore'
 import { useAsesorLogout } from '../../hooks/useAsesor'
@@ -8,6 +8,11 @@ import { getInitials } from '../../lib/utils'
 export function AsesorLayout() {
   const { asesor } = useAsesorStore()
   const logout = useAsesorLogout()
+
+  // Guard: if email not verified, redirect to verify-code
+  if (asesor && asesor.emailVerified === false) {
+    return <Navigate to={`/asesor/verify-code?email=${encodeURIComponent(asesor.email)}`} replace />
+  }
 
   return (
     <div className="min-h-screen bg-[#0A0A12] flex flex-col max-w-lg mx-auto relative">
@@ -44,6 +49,7 @@ export function AsesorLayout() {
             {[
               { to: '/asesor/dashboard',       icon: LayoutDashboard, label: 'Inicio' },
               { to: '/asesor/sesiones',         icon: CalendarDays,    label: 'Sesiones' },
+              { to: '/asesor/calendario',       icon: Calendar,        label: 'Calendario' },
               { to: '/asesor/disponibilidad',   icon: Clock,           label: 'Horario' },
             ].map(({ to, icon: Icon, label }) => (
               <NavLink key={to} to={to} className="flex-1 flex flex-col items-center gap-1 py-3 transition-colors relative">

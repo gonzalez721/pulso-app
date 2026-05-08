@@ -57,7 +57,7 @@ export async function asesorRegister(req: Request, res: Response): Promise<void>
       bio: bio || null,
       emailVerified: false,
     },
-    select: { id: true, email: true, nombre: true, carrera: true, semestre: true, bio: true, fotoUrl: true },
+    select: { id: true, email: true, nombre: true, carrera: true, semestre: true, bio: true, fotoUrl: true, emailVerified: true },
   })
 
   // Send 6-digit verification code
@@ -426,4 +426,33 @@ export async function saveObservacion(req: AsesorRequest, res: Response): Promis
   }).catch(() => {})
 
   res.json(obs)
+}
+
+// ─── Update session status ─────────────────────────────────────────────────
+
+export async function updateSesionStatus(req: AsesorRequest, res: Response): Promise<void> {
+  const { sesionId } = req.params
+  const { estado } = req.body
+
+  const VALID_STATES = ['completada', 'cancelada', 'aplazada']
+  if (!estado || !VALID_STATES.includes(estado)) {
+    res.status(400).json({ error: `Estado inválido. Usa: ${VALID_STATES.join(', ')}` }); return
+  }
+
+  const sesion = await prisma.sesion.findFirst({
+    where: { id: sesionId, asesorId: req.asesorId! },
+  })
+  if (!sesion) { res.status(404).json({ error: 'Sesión no encontrada' }); return }
+
+  const updated = await prisma.sesion.update({
+    where: { id: sesionId },
+    data: { estado },
+    include: {
+      user: { select: { nombre: true, email: true } },
+      asesor: { select: { nombre: true } },
+      observaciones: true,
+    },
+  })
+
+  res.json(updated)
 }

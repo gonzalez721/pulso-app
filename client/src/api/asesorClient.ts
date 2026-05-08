@@ -84,4 +84,7 @@ export const asesorEndpoints = {
 
   updateDisponibilidad: (disponibilidad: Array<{ dia: string; horas: string[] }>) =>
     asesorApi.patch<{ id: string; disponibilidad: Array<{ dia: string; horas: string[] }> }>('/disponibilidad', { disponibilidad }),
+
+  updateSesionStatus: (sesionId: string, estado: 'completada' | 'cancelada' | 'aplazada') =>
+    asesorApi.patch(`/sesiones/${sesionId}/status`, { estado }),
 }
