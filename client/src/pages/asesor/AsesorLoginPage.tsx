@@ -1,19 +1,14 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Link, useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import { Link } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { useAsesorLogin } from '../../hooks/useAsesor'
 
 export function AsesorLoginPage() {
-  const [email, setEmail]           = useState('')
-  const [password, setPassword]     = useState('')
-  const [unverified, setUnverified] = useState(false)
-  const navigate = useNavigate()
-  const { mutate, isPending, error } = useAsesorLogin({
-    onUnverified: () => setUnverified(true),
-  })
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
+  const { mutate, isPending, error } = useAsesorLogin()
 
   return (
     <div className="min-h-screen bg-[#0A0A12] flex flex-col items-center justify-center px-6 relative overflow-hidden">
@@ -42,7 +37,7 @@ export function AsesorLoginPage() {
             type="email"
             placeholder="tu.nombre@universidad.edu.co"
             value={email}
-            onChange={(e) => { setEmail(e.target.value); setUnverified(false) }}
+            onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
           />
           <Input
@@ -54,38 +49,14 @@ export function AsesorLoginPage() {
             autoComplete="current-password"
           />
 
-          {/* Unverified notice */}
-          {unverified && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-yellow-500/10 border border-yellow-500/25 rounded-2xl px-4 py-3 space-y-2"
-            >
-              <p className="text-yellow-300 text-sm font-medium">
-                📬 Debes verificar tu correo antes de ingresar.
-              </p>
-              <button
-                type="button"
-                onClick={async () => {
-                  const BASE = import.meta.env.VITE_API_URL ?? 'https://pulso-server.onrender.com'
-                  await axios.post(`${BASE}/api/asesor/resend-verification`, { email }).catch(() => {})
-                  navigate('/verify-email?role=mentor')
-                }}
-                className="text-yellow-300 text-xs underline hover:text-yellow-200 transition-colors"
-              >
-                Reenviar enlace de verificación →
-              </button>
-            </motion.div>
-          )}
-
-          {error && !unverified && (
+          {error && (
             <p className="text-red-400 text-sm font-medium text-center">
-              Credenciales incorrectas. Intenta de nuevo.
+              {(error as any)?.response?.data?.error ?? 'Credenciales incorrectas. Intenta de nuevo.'}
             </p>
           )}
 
           <Button
-            onClick={() => { setUnverified(false); mutate({ email, password }) }}
+            onClick={() => mutate({ email, password })}
             loading={isPending}
             disabled={!email || !password}
             fullWidth
@@ -103,7 +74,7 @@ export function AsesorLoginPage() {
               Regístrate aquí
             </Link>
           </p>
-          <Link to="/forgot-password?role=mentor" className="block text-xs text-text-dim hover:text-text-muted transition-colors">
+          <Link to="/asesor/forgot-password?role=mentor" className="block text-xs text-text-dim hover:text-text-muted transition-colors">
             ¿Olvidaste tu contraseña?
           </Link>
         </div>

@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import axios from 'axios'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { useLogin } from '../hooks/useAuth'
@@ -9,15 +8,10 @@ import { useLogin } from '../hooks/useAuth'
 export function LoginPage() {
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
-  const [unverified, setUnverified] = useState(false)
-  const navigate = useNavigate()
-  const { mutate, isPending, error } = useLogin({
-    onUnverified: () => setUnverified(true),
-  })
+  const { mutate, isPending, error } = useLogin()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setUnverified(false)
     mutate({ email, password })
   }
 
@@ -59,33 +53,9 @@ export function LoginPage() {
             autoComplete="current-password"
           />
 
-          {/* Unverified email notice */}
-          {unverified && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-yellow-500/10 border border-yellow-500/25 rounded-2xl px-4 py-3 space-y-2"
-            >
-              <p className="text-yellow-300 text-sm font-medium">
-                📬 Debes verificar tu correo antes de ingresar.
-              </p>
-              <button
-                type="button"
-                onClick={async () => {
-                  const BASE = import.meta.env.VITE_API_URL ?? 'https://pulso-server.onrender.com'
-                  await axios.post(`${BASE}/api/auth/resend-verification`, { email }).catch(() => {})
-                  navigate('/verify-email')
-                }}
-                className="text-yellow-300 text-xs underline hover:text-yellow-200 transition-colors"
-              >
-                Reenviar enlace de verificación →
-              </button>
-            </motion.div>
-          )}
-
-          {error && !unverified && (
+          {error && (
             <p className="text-sm text-red-400 font-medium text-center">
-              Credenciales incorrectas. Intenta de nuevo.
+              {(error as any)?.response?.data?.error ?? 'Credenciales incorrectas. Intenta de nuevo.'}
             </p>
           )}
 
@@ -97,19 +67,16 @@ export function LoginPage() {
         <div className="space-y-3 text-center">
           <p className="text-sm text-text-muted">
             ¿No tienes cuenta?{' '}
-            <Link to="/register" className="font-bold text-neon-green hover:brightness-110">
+            <Link to="/register" className="font-bold text-neon-green hover:brightness-110 transition-all">
               Regístrate gratis
             </Link>
           </p>
           <Link to="/forgot-password" className="block text-xs text-text-dim hover:text-text-muted transition-colors">
             ¿Olvidaste tu contraseña?
           </Link>
-        </div>
-
-        <div className="bg-surface-raised border border-neon-green/20 rounded-2xl p-3 text-center">
-          <p className="text-xs text-neon-green/80 font-medium">
-            🎓 Solo correos institucionales .edu.co
-          </p>
+          <Link to="/asesor/login" className="block text-xs text-text-dim hover:text-text-muted transition-colors">
+            ¿Eres mentor? Ingresa aquí →
+          </Link>
         </div>
       </motion.div>
     </div>

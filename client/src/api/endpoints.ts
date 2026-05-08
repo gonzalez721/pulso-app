@@ -13,10 +13,22 @@ import type {
 // Auth
 export const authApi = {
   register: (data: { email: string; password: string; nombre: string; universidad?: string; semestre?: number }) =>
-    api.post<{ user: User; accessToken: string; refreshToken: string; requiresVerification?: boolean }>('/auth/register', data),
+    api.post<{ user: User; accessToken: string; refreshToken: string }>('/auth/register', data),
 
   login: (data: { email: string; password: string }) =>
     api.post<{ user: User; accessToken: string; refreshToken: string }>('/auth/login', data),
+
+  verifyCode: (data: { email: string; code: string }) =>
+    api.post<{ message: string; user: User }>('/auth/verify-code', data),
+
+  resendVerification: (email: string) =>
+    api.post('/auth/resend-verification', { email }),
+
+  forgotPassword: (data: { email: string }) =>
+    api.post('/auth/forgot-password', data),
+
+  resetPassword: (data: { email: string; code: string; password: string }) =>
+    api.post('/auth/reset-password', data),
 
   refresh: (refreshToken: string) =>
     api.post<{ accessToken: string; refreshToken: string }>('/auth/refresh', { refreshToken }),

@@ -1,6 +1,5 @@
 import { Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
-import crypto from 'crypto'
 import { prisma } from '../lib/prisma'
 import { signAccessToken, signRefreshToken, saveRefreshToken, verifyRefreshToken, isRefreshTokenValid, revokeRefreshToken } from '../lib/jwt'
 import { AsesorRequest } from '../middleware/asesorAuth'
@@ -8,13 +7,17 @@ import { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendSe
 
 const CLIENT_URL = process.env.FRONTEND_URL ?? 'https://client-silk-one.vercel.app'
 
+function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
 async function createVerificationToken(userId: string, type: 'email_verify' | 'password_reset') {
   await prisma.verificationToken.deleteMany({ where: { userId, type } })
-  const token = crypto.randomBytes(32).toString('hex')
+  const code = generateOTP()
   const hours = type === 'email_verify' ? 24 : 1
   const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000)
-  await prisma.verificationToken.create({ data: { userId, token, type, expiresAt } })
-  return token
+  await prisma.verificationToken.create({ data: { userId, token: code, type, expiresAt } })
+  return code
 }
 
 // ─── Auth ──────────────────────────────────────────────────────────────────
@@ -57,10 +60,10 @@ export async function asesorRegister(req: Request, res: Response): Promise<void>
     select: { id: true, email: true, nombre: true, carrera: true, semestre: true, bio: true, fotoUrl: true },
   })
 
-  // Send verification email (non-blocking — does not block login)
-  const token = await createVerificationToken(asesor.id, 'email_verify')
-  const verifyUrl = `${CLIENT_URL}/verify-email?token=${token}&role=mentor`
-  sendVerificationEmail({ to: asesor.email, nombre: asesor.nombre, verifyUrl, role: 'mentor' }).catch((e) => console.error('[Resend] verify mentor:', e.message))
+  // Send 6-digit verification code
+  const code = await createVerificationToken(asesor.id, 'email_verify')
+  sendVerificationEmail({ to: asesor.email, nombre: asesor.nombre, code, role: 'mentor' })
+    .catch((e) => console.error('[Resend] verify mentor:', e.message))
 
   const payload = { userId: asesor.id, email: asesor.email, role: 'asesor' } as any
   const accessToken  = signAccessToken(payload)
@@ -96,38 +99,46 @@ export async function asesorLogin(req: Request, res: Response): Promise<void> {
       id: asesor.id, email: asesor.email, nombre: asesor.nombre,
       carrera: asesor.carrera, semestre: asesor.semestre,
       bio: asesor.bio, fotoUrl: asesor.fotoUrl,
+      emailVerified: asesor.emailVerified,
     },
     accessToken,
     refreshToken,
   })
 }
 
-export async function asesorVerifyEmail(req: Request, res: Response): Promise<void> {
-  const { token } = req.query as { token?: string }
-  if (!token) { res.status(400).json({ error: 'Token requerido' }); return }
+export async function asesorVerifyCode(req: Request, res: Response): Promise<void> {
+  const { email, code } = req.body
+  if (!email || !code) { res.status(400).json({ error: 'Email y código son requeridos' }); return }
 
-  const record = await prisma.verificationToken.findUnique({ where: { token } })
-  if (!record || record.type !== 'email_verify') { res.status(400).json({ error: 'Token inválido' }); return }
-  if (record.expiresAt < new Date()) {
-    await prisma.verificationToken.delete({ where: { token } })
-    res.status(400).json({ error: 'El enlace ha expirado. Solicita uno nuevo.' }); return
+  const asesor = await prisma.asesor.findUnique({ where: { email: email.toLowerCase() } })
+  if (!asesor) { res.status(400).json({ error: 'Código inválido' }); return }
+
+  if (asesor.emailVerified) {
+    res.json({ message: 'Tu correo ya está verificado.' })
+    return
   }
 
-  const asesor = await prisma.asesor.update({
-    where: { id: record.userId },
-    data: { emailVerified: true },
-    select: { id: true, email: true, nombre: true, carrera: true, semestre: true, bio: true, fotoUrl: true },
+  const record = await prisma.verificationToken.findFirst({
+    where: { userId: asesor.id, type: 'email_verify' },
   })
-  await prisma.verificationToken.delete({ where: { token } })
+  if (!record || record.token !== code.toString().trim()) {
+    res.status(400).json({ error: 'Código incorrecto. Revisa tu correo e intenta de nuevo.' }); return
+  }
+  if (record.expiresAt < new Date()) {
+    await prisma.verificationToken.delete({ where: { id: record.id } })
+    res.status(400).json({ error: 'El código ha expirado. Solicita uno nuevo.' }); return
+  }
 
-  sendWelcomeEmail({ to: asesor.email, nombre: asesor.nombre, role: 'mentor' }).catch(console.error)
+  const updated = await prisma.asesor.update({
+    where: { id: asesor.id },
+    data: { emailVerified: true },
+    select: { id: true, email: true, nombre: true, carrera: true, semestre: true, bio: true, fotoUrl: true, emailVerified: true },
+  })
+  await prisma.verificationToken.delete({ where: { id: record.id } })
 
-  const payload = { userId: asesor.id, email: asesor.email, role: 'asesor' } as any
-  const accessToken  = signAccessToken(payload)
-  const refreshToken = signRefreshToken(payload)
-  await saveRefreshToken(asesor.id, refreshToken)
+  sendWelcomeEmail({ to: updated.email, nombre: updated.nombre, role: 'mentor' }).catch(console.error)
 
-  res.json({ message: '¡Correo verificado!', asesor, accessToken, refreshToken })
+  res.json({ message: '¡Correo verificado!', asesor: updated })
 }
 
 export async function asesorResendVerification(req: Request, res: Response): Promise<void> {
@@ -135,13 +146,12 @@ export async function asesorResendVerification(req: Request, res: Response): Pro
   if (!email) { res.status(400).json({ error: 'Email requerido' }); return }
 
   const asesor = await prisma.asesor.findUnique({ where: { email: email.toLowerCase() } })
-  if (!asesor) { res.json({ message: 'Si el correo existe, recibirás un nuevo enlace.' }); return }
+  if (!asesor) { res.json({ message: 'Si el correo existe, recibirás un nuevo código.' }); return }
   if (asesor.emailVerified) { res.json({ message: 'Tu correo ya está verificado.' }); return }
 
-  const token = await createVerificationToken(asesor.id, 'email_verify')
-  const verifyUrl = `${CLIENT_URL}/verify-email?token=${token}&role=mentor`
-  sendVerificationEmail({ to: asesor.email, nombre: asesor.nombre, verifyUrl, role: 'mentor' }).catch(console.error)
-  res.json({ message: 'Enlace de verificación enviado.' })
+  const code = await createVerificationToken(asesor.id, 'email_verify')
+  sendVerificationEmail({ to: asesor.email, nombre: asesor.nombre, code, role: 'mentor' }).catch(console.error)
+  res.json({ message: 'Código de verificación enviado.' })
 }
 
 export async function asesorForgotPassword(req: Request, res: Response): Promise<void> {
@@ -150,28 +160,36 @@ export async function asesorForgotPassword(req: Request, res: Response): Promise
 
   const asesor = await prisma.asesor.findUnique({ where: { email: email.toLowerCase() } })
   if (asesor) {
-    const token = await createVerificationToken(asesor.id, 'password_reset')
-    const resetUrl = `${CLIENT_URL}/reset-password?token=${token}&role=mentor`
-    sendPasswordResetEmail({ to: asesor.email, nombre: asesor.nombre, resetUrl }).catch(console.error)
+    const code = await createVerificationToken(asesor.id, 'password_reset')
+    sendPasswordResetEmail({ to: asesor.email, nombre: asesor.nombre, code }).catch(console.error)
   }
-  res.json({ message: 'Si el correo existe, recibirás un enlace para restablecer tu contraseña.' })
+  res.json({ message: 'Si el correo está registrado, recibirás un código para restablecer tu contraseña.' })
 }
 
 export async function asesorResetPassword(req: Request, res: Response): Promise<void> {
-  const { token, password } = req.body
-  if (!token || !password) { res.status(400).json({ error: 'Token y contraseña requeridos' }); return }
+  const { email, code, password } = req.body
+  if (!email || !code || !password) {
+    res.status(400).json({ error: 'Email, código y contraseña son requeridos' }); return
+  }
   if (password.length < 8) { res.status(400).json({ error: 'Mínimo 8 caracteres' }); return }
 
-  const record = await prisma.verificationToken.findUnique({ where: { token } })
-  if (!record || record.type !== 'password_reset') { res.status(400).json({ error: 'Token inválido' }); return }
+  const asesor = await prisma.asesor.findUnique({ where: { email: email.toLowerCase() } })
+  if (!asesor) { res.status(400).json({ error: 'Código inválido' }); return }
+
+  const record = await prisma.verificationToken.findFirst({
+    where: { userId: asesor.id, type: 'password_reset' },
+  })
+  if (!record || record.token !== code.toString().trim()) {
+    res.status(400).json({ error: 'Código incorrecto' }); return
+  }
   if (record.expiresAt < new Date()) {
-    await prisma.verificationToken.delete({ where: { token } })
-    res.status(400).json({ error: 'El enlace ha expirado.' }); return
+    await prisma.verificationToken.delete({ where: { id: record.id } })
+    res.status(400).json({ error: 'El código ha expirado. Solicita uno nuevo.' }); return
   }
 
   const hashed = await bcrypt.hash(password, 10)
-  await prisma.asesor.update({ where: { id: record.userId }, data: { password: hashed } })
-  await prisma.verificationToken.delete({ where: { token } })
+  await prisma.asesor.update({ where: { id: asesor.id }, data: { password: hashed } })
+  await prisma.verificationToken.delete({ where: { id: record.id } })
   res.json({ message: 'Contraseña actualizada correctamente.' })
 }
 

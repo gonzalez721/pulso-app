@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import {
   register, login, refresh, logout,
-  verifyEmail, resendVerification,
+  verifyCode, resendVerification,
   forgotPassword, resetPassword,
 } from '../controllers/authController'
 
@@ -11,7 +11,7 @@ router.post('/register',            register)
 router.post('/login',               login)
 router.post('/refresh',             refresh)
 router.post('/logout',              logout)
-router.get('/verify-email',         verifyEmail)
+router.post('/verify-code',         verifyCode)
 router.post('/resend-verification', resendVerification)
 router.post('/forgot-password',     forgotPassword)
 router.post('/reset-password',      resetPassword)

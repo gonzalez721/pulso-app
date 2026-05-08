@@ -60,27 +60,39 @@ function baseHtml(content: string): string {
 </html>`
 }
 
-// ─── Email verification ──────────────────────────────────────────────────────
+// ─── Email verification (6-digit OTP) ───────────────────────────────────────
 
 export async function sendVerificationEmail(params: {
   to: string
   nombre: string
-  verifyUrl: string
+  code: string
   role: 'student' | 'mentor'
 }): Promise<void> {
   const roleLabel = params.role === 'mentor' ? 'Mentor' : 'Estudiante'
+  const digits = params.code.split('').map((d) =>
+    `<span style="display:inline-block;width:48px;height:60px;line-height:60px;text-align:center;background:#1a1a2e;border:2px solid rgba(124,77,255,0.4);border-radius:12px;font-size:28px;font-weight:900;color:#fff;margin:0 4px;">${d}</span>`
+  ).join('')
   await getResend().emails.send({
     from: FROM,
     to: params.to,
-    subject: '✅ Verifica tu correo — PULSO',
+    subject: `🔐 Tu código de verificación PULSO: ${params.code}`,
     html: baseHtml(`
       <span class="tag">${roleLabel}</span>
       <h2 style="margin-top:14px;">Verifica tu correo institucional</h2>
       <p>Hola <strong style="color:#fff;">${params.nombre}</strong>, bienvenido a PULSO.<br>
-      Haz clic en el botón para activar tu cuenta.</p>
-      <a href="${params.verifyUrl}" class="btn">Verificar mi correo →</a>
-      <p style="font-size:12px;color:#666;">Este enlace expira en <strong style="color:#aaa;">24 horas</strong>.<br>
-      Si no creaste esta cuenta, ignora este correo.</p>
+      Ingresa este código en la app para activar tu cuenta:</p>
+      <div style="text-align:center;margin:28px 0 20px;">
+        ${digits}
+      </div>
+      <div class="info-box" style="text-align:center;">
+        <p style="margin:0;font-size:13px;color:#ccc;">
+          Código: <strong style="font-size:22px;letter-spacing:6px;color:#A8FF3E;">${params.code}</strong>
+        </p>
+      </div>
+      <p style="font-size:12px;color:#666;margin-top:16px;">
+        ⏱ Este código expira en <strong style="color:#aaa;">24 horas</strong>.<br>
+        Si no creaste esta cuenta, ignora este correo.
+      </p>
     `),
   })
 }
@@ -120,25 +132,35 @@ export async function sendWelcomeEmail(params: {
   })
 }
 
-// ─── Password reset ──────────────────────────────────────────────────────────
+// ─── Password reset (6-digit OTP) ────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(params: {
   to: string
   nombre: string
-  resetUrl: string
+  code: string
 }): Promise<void> {
+  const digits = params.code.split('').map((d) =>
+    `<span style="display:inline-block;width:48px;height:60px;line-height:60px;text-align:center;background:#1a1a2e;border:2px solid rgba(168,255,62,0.3);border-radius:12px;font-size:28px;font-weight:900;color:#fff;margin:0 4px;">${d}</span>`
+  ).join('')
   await getResend().emails.send({
     from: FROM,
     to: params.to,
-    subject: '🔑 Restablecer contraseña — PULSO',
+    subject: `🔑 Código para restablecer contraseña: ${params.code}`,
     html: baseHtml(`
       <h2>Restablecer contraseña</h2>
       <p>Hola <strong style="color:#fff;">${params.nombre}</strong>,<br>
-      recibimos una solicitud para restablecer la contraseña de tu cuenta PULSO.</p>
-      <a href="${params.resetUrl}" class="btn">Restablecer contraseña →</a>
+      ingresa este código para restablecer tu contraseña de PULSO:</p>
+      <div style="text-align:center;margin:28px 0 20px;">
+        ${digits}
+      </div>
+      <div class="info-box" style="text-align:center;">
+        <p style="margin:0;font-size:13px;color:#ccc;">
+          Código: <strong style="font-size:22px;letter-spacing:6px;color:#A8FF3E;">${params.code}</strong>
+        </p>
+      </div>
       <div class="divider"></div>
       <p style="font-size:12px;color:#666;">
-        Este enlace expira en <strong style="color:#aaa;">1 hora</strong>.<br>
+        ⏱ Este código expira en <strong style="color:#aaa;">1 hora</strong>.<br>
         Si no solicitaste esto, ignora este correo — tu contraseña no cambiará.
       </p>
     `),

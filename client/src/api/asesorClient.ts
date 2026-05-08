@@ -48,10 +48,22 @@ asesorApi.interceptors.response.use(
 // API methods
 export const asesorEndpoints = {
   register: (data: { email: string; password: string; nombre: string; carrera: string; semestre: number; bio?: string }) =>
-    asesorApi.post<{ asesor: any; accessToken: string; refreshToken: string; requiresVerification?: boolean }>('/register', data),
+    asesorApi.post<{ asesor: any; accessToken: string; refreshToken: string }>('/register', data),
 
   login: (data: { email: string; password: string }) =>
     asesorApi.post<{ asesor: any; accessToken: string; refreshToken: string }>('/login', data),
+
+  verifyCode: (data: { email: string; code: string }) =>
+    asesorApi.post<{ message: string; asesor: any }>('/verify-code', data),
+
+  resendVerification: (email: string) =>
+    asesorApi.post('/resend-verification', { email }),
+
+  forgotPassword: (email: string) =>
+    asesorApi.post('/forgot-password', { email }),
+
+  resetPassword: (data: { email: string; code: string; password: string }) =>
+    asesorApi.post('/reset-password', data),
 
   getMe: () => asesorApi.get('/me'),
 

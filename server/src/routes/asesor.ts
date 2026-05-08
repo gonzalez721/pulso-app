@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import {
   asesorRegister, asesorLogin, asesorRefresh,
-  asesorVerifyEmail, asesorResendVerification,
+  asesorVerifyCode, asesorResendVerification,
   asesorForgotPassword, asesorResetPassword,
   getAsesorProfile, getAsesorSesiones,
   getEstudianteStats, saveObservacion,
@@ -15,7 +15,7 @@ const router = Router()
 router.post('/register',             asesorRegister)
 router.post('/login',                asesorLogin)
 router.post('/refresh',              asesorRefresh)
-router.get('/verify-email',          asesorVerifyEmail)
+router.post('/verify-code',          asesorVerifyCode)
 router.post('/resend-verification',  asesorResendVerification)
 router.post('/forgot-password',      asesorForgotPassword)
 router.post('/reset-password',       asesorResetPassword)

@@ -10,14 +10,14 @@ export function useAsesorRegister() {
     mutationFn: (data: { email: string; password: string; nombre: string; carrera: string; semestre: number; bio?: string }) =>
       asesorEndpoints.register(data).then((r) => r.data),
     onSuccess: (data) => {
-      // Always log in immediately — verification email is sent but not required
       setAuth(data.asesor, data.accessToken, data.refreshToken)
-      navigate('/asesor/dashboard')
+      // Go to code verification after registration
+      navigate(`/asesor/verify-code?email=${encodeURIComponent(data.asesor.email)}`)
     },
   })
 }
 
-export function useAsesorLogin(opts?: { onUnverified?: () => void }) {
+export function useAsesorLogin() {
   const { setAuth } = useAsesorStore()
   const navigate = useNavigate()
   return useMutation({
@@ -25,13 +25,31 @@ export function useAsesorLogin(opts?: { onUnverified?: () => void }) {
       asesorEndpoints.login(data).then((r) => r.data),
     onSuccess: (data) => {
       setAuth(data.asesor, data.accessToken, data.refreshToken)
-      navigate('/asesor/dashboard')
-    },
-    onError: (err: any) => {
-      if (err?.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
-        opts?.onUnverified?.()
+      if (!data.asesor.emailVerified) {
+        navigate(`/asesor/verify-code?email=${encodeURIComponent(data.asesor.email)}`)
+      } else {
+        navigate('/asesor/dashboard')
       }
     },
+  })
+}
+
+export function useAsesorVerifyCode() {
+  const { setAsesor } = useAsesorStore()
+  const navigate = useNavigate()
+  return useMutation({
+    mutationFn: (data: { email: string; code: string }) =>
+      asesorEndpoints.verifyCode(data).then((r) => r.data),
+    onSuccess: (data) => {
+      setAsesor(data.asesor)
+      navigate('/asesor/dashboard')
+    },
+  })
+}
+
+export function useAsesorResendVerification() {
+  return useMutation({
+    mutationFn: (email: string) => asesorEndpoints.resendVerification(email),
   })
 }
 
@@ -90,6 +108,23 @@ export function useUpdateDisponibilidad() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['asesor', 'me'] })
       qc.invalidateQueries({ queryKey: ['disponibilidad'] })
+    },
+  })
+}
+
+export function useAsesorForgotPassword() {
+  return useMutation({
+    mutationFn: (email: string) => asesorEndpoints.forgotPassword(email),
+  })
+}
+
+export function useAsesorResetPassword() {
+  const navigate = useNavigate()
+  return useMutation({
+    mutationFn: (data: { email: string; code: string; password: string }) =>
+      asesorEndpoints.resetPassword(data),
+    onSuccess: () => {
+      navigate('/asesor/login')
     },
   })
 }

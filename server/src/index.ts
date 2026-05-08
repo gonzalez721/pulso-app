@@ -67,7 +67,7 @@ app.get('/health/email', async (req, res) => {
     await sendVerificationEmail({
       to,
       nombre: 'Test',
-      verifyUrl: 'https://pulsopacto.online/verify-email?token=TEST',
+      code: '123456',
       role: 'student',
     })
     console.log(`[Resend] test email sent to ${to}`)

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { authApi, userApi } from '../api/endpoints'
 import { useAuthStore } from '../store/authStore'
 
-export function useLogin(opts?: { onUnverified?: () => void }) {
+export function useLogin(opts?: { onUnverified?: (email: string) => void }) {
   const { setAuth } = useAuthStore()
   const navigate = useNavigate()
 
@@ -11,11 +11,11 @@ export function useLogin(opts?: { onUnverified?: () => void }) {
     mutationFn: (data: { email: string; password: string }) => authApi.login(data),
     onSuccess: ({ data }) => {
       setAuth(data.user, data.accessToken, data.refreshToken)
-      navigate(data.user.onboardingComplete ? '/dashboard' : '/onboarding')
-    },
-    onError: (err: any) => {
-      if (err?.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
-        opts?.onUnverified?.()
+      if (!data.user.emailVerified) {
+        navigate(`/verify-code?email=${encodeURIComponent(data.user.email)}`)
+        opts?.onUnverified?.(data.user.email)
+      } else {
+        navigate(data.user.onboardingComplete ? '/dashboard' : '/onboarding')
       }
     },
   })
@@ -29,10 +29,29 @@ export function useRegister() {
     mutationFn: (data: { email: string; password: string; nombre: string; universidad?: string; semestre?: number }) =>
       authApi.register(data),
     onSuccess: ({ data }) => {
-      // Always log in immediately — verification email is sent but not required
       setAuth(data.user, data.accessToken, data.refreshToken)
-      navigate('/onboarding')
+      // Always go to code verification after registration
+      navigate(`/verify-code?email=${encodeURIComponent(data.user.email)}`)
     },
+  })
+}
+
+export function useVerifyCode() {
+  const { setUser, user } = useAuthStore()
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: (data: { email: string; code: string }) => authApi.verifyCode(data),
+    onSuccess: ({ data }) => {
+      setUser(data.user)
+      navigate(data.user.onboardingComplete ? '/dashboard' : '/onboarding')
+    },
+  })
+}
+
+export function useResendVerification() {
+  return useMutation({
+    mutationFn: (email: string) => authApi.resendVerification(email),
   })
 }
 
@@ -72,6 +91,24 @@ export function useUpdateProfile() {
     onSuccess: (user) => {
       setUser(user)
       queryClient.invalidateQueries({ queryKey: ['profile'] })
+    },
+  })
+}
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: (email: string) => authApi.forgotPassword({ email }),
+  })
+}
+
+export function useResetPassword() {
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: (data: { email: string; code: string; password: string }) =>
+      authApi.resetPassword(data),
+    onSuccess: (_, variables) => {
+      navigate(`/login`)
     },
   })
 }
