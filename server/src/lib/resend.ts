@@ -246,6 +246,113 @@ export async function sendSessionCancellation(params: {
   })
 }
 
+// ─── Session summary after notes are saved ───────────────────────────────────
+
+export async function sendSessionSummaryStudent(params: {
+  to: string
+  studentName: string
+  asesorName: string
+  fechaHora: Date
+  temasDiscutidos: string[]
+  compromisosProximaSemana: string[]
+  patronesIdentificados: string[]
+  notasImportantes?: string
+}): Promise<void> {
+  const fecha = params.fechaHora.toLocaleDateString('es-CO', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  })
+  const listItems = (items: string[]) =>
+    items.map((i) => `<li style="margin-bottom:4px;color:#ccc;">${i}</li>`).join('')
+
+  await getResend().emails.send({
+    from: FROM,
+    to: params.to,
+    subject: `📋 Resumen de tu sesión con ${params.asesorName} — PULSO`,
+    html: baseHtml(`
+      <h2>Resumen de tu sesión ✅</h2>
+      <p>Hola <strong style="color:#fff;">${params.studentName}</strong>,<br>
+      aquí tienes el resumen de tu sesión con <strong style="color:#fff;">${params.asesorName}</strong> del ${fecha}.</p>
+
+      ${params.temasDiscutidos.length > 0 ? `
+      <div class="info-box">
+        <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#A8FF3E;text-transform:uppercase;letter-spacing:.5px;">Temas discutidos</p>
+        <ul style="margin:0;padding-left:16px;">${listItems(params.temasDiscutidos)}</ul>
+      </div>` : ''}
+
+      ${params.compromisosProximaSemana.length > 0 ? `
+      <div class="info-box" style="margin-top:12px;">
+        <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#A8FF3E;text-transform:uppercase;letter-spacing:.5px;">Tus compromisos para esta semana</p>
+        <ul style="margin:0;padding-left:16px;">${listItems(params.compromisosProximaSemana)}</ul>
+      </div>` : ''}
+
+      ${params.patronesIdentificados.length > 0 ? `
+      <div class="info-box" style="margin-top:12px;">
+        <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#7C4DFF;text-transform:uppercase;letter-spacing:.5px;">Patrones identificados</p>
+        <ul style="margin:0;padding-left:16px;">${listItems(params.patronesIdentificados)}</ul>
+      </div>` : ''}
+
+      ${params.notasImportantes ? `
+      <div class="divider"></div>
+      <p style="font-size:13px;"><strong style="color:#fff;">Nota del mentor:</strong><br>${params.notasImportantes}</p>` : ''}
+
+      <a href="https://pulsopacto.online/sessions" class="btn">Ver mis sesiones →</a>
+      <p style="font-size:12px;color:#666;">Recuerda registrar tus gastos esta semana para avanzar en tus metas 💪</p>
+    `),
+  })
+}
+
+export async function sendSessionSummaryAsesor(params: {
+  to: string
+  asesorName: string
+  studentName: string
+  fechaHora: Date
+  temasDiscutidos: string[]
+  compromisosProximaSemana: string[]
+  patronesIdentificados: string[]
+  notasImportantes?: string
+}): Promise<void> {
+  const fecha = params.fechaHora.toLocaleDateString('es-CO', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  })
+  const listItems = (items: string[]) =>
+    items.map((i) => `<li style="margin-bottom:4px;color:#ccc;">${i}</li>`).join('')
+
+  await getResend().emails.send({
+    from: FROM,
+    to: params.to,
+    subject: `📋 Notas guardadas — Sesión con ${params.studentName}`,
+    html: baseHtml(`
+      <h2>Notas guardadas ✅</h2>
+      <p>Hola <strong style="color:#fff;">${params.asesorName}</strong>,<br>
+      las notas de la sesión con <strong style="color:#fff;">${params.studentName}</strong> del ${fecha} han sido guardadas correctamente.</p>
+
+      ${params.temasDiscutidos.length > 0 ? `
+      <div class="info-box">
+        <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#A8FF3E;text-transform:uppercase;letter-spacing:.5px;">Temas discutidos</p>
+        <ul style="margin:0;padding-left:16px;">${listItems(params.temasDiscutidos)}</ul>
+      </div>` : ''}
+
+      ${params.compromisosProximaSemana.length > 0 ? `
+      <div class="info-box" style="margin-top:12px;">
+        <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#A8FF3E;text-transform:uppercase;letter-spacing:.5px;">Compromisos asignados</p>
+        <ul style="margin:0;padding-left:16px;">${listItems(params.compromisosProximaSemana)}</ul>
+      </div>` : ''}
+
+      ${params.patronesIdentificados.length > 0 ? `
+      <div class="info-box" style="margin-top:12px;">
+        <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#7C4DFF;text-transform:uppercase;letter-spacing:.5px;">Patrones identificados</p>
+        <ul style="margin:0;padding-left:16px;">${listItems(params.patronesIdentificados)}</ul>
+      </div>` : ''}
+
+      ${params.notasImportantes ? `
+      <div class="divider"></div>
+      <p style="font-size:13px;"><strong style="color:#fff;">Tus notas:</strong><br>${params.notasImportantes}</p>` : ''}
+
+      <a href="https://pulsopacto.online/asesor/sesiones" class="btn">Ver mis sesiones →</a>
+    `),
+  })
+}
+
 // ─── Session cancellation for asesor ─────────────────────────────────────────
 
 export async function sendSessionCancellationAsesor(params: {

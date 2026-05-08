@@ -4,7 +4,7 @@ import crypto from 'crypto'
 import { prisma } from '../lib/prisma'
 import { signAccessToken, signRefreshToken, saveRefreshToken, verifyRefreshToken, isRefreshTokenValid, revokeRefreshToken } from '../lib/jwt'
 import { AsesorRequest } from '../middleware/asesorAuth'
-import { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail } from '../lib/resend'
+import { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendSessionSummaryStudent, sendSessionSummaryAsesor } from '../lib/resend'
 
 const CLIENT_URL = process.env.FRONTEND_URL ?? 'https://client-silk-one.vercel.app'
 
@@ -380,17 +380,48 @@ export async function saveObservacion(req: AsesorRequest, res: Response): Promis
 
   const sesion = await prisma.sesion.findFirst({
     where: { id: sesionId, asesorId: req.asesorId! },
+    include: {
+      user: { select: { nombre: true, email: true } },
+      asesor: { select: { nombre: true, email: true } },
+    },
   })
   if (!sesion) { res.status(404).json({ error: 'Sesión no encontrada' }); return }
 
+  const temas       = temasDiscutidos          ?? []
+  const patrones    = patronesIdentificados    ?? []
+  const compromisos = compromisosProximaSemana ?? []
+
   const obs = await prisma.observacion.upsert({
     where: { sesionId },
-    create: { sesionId, temasDiscutidos: temasDiscutidos ?? [], patronesIdentificados: patronesIdentificados ?? [], compromisosProximaSemana: compromisosProximaSemana ?? [], notasImportantes },
-    update: { temasDiscutidos: temasDiscutidos ?? [], patronesIdentificados: patronesIdentificados ?? [], compromisosProximaSemana: compromisosProximaSemana ?? [], notasImportantes },
+    create: { sesionId, temasDiscutidos: temas, patronesIdentificados: patrones, compromisosProximaSemana: compromisos, notasImportantes },
+    update: { temasDiscutidos: temas, patronesIdentificados: patrones, compromisosProximaSemana: compromisos, notasImportantes },
   })
 
   // Mark session as completed
   await prisma.sesion.update({ where: { id: sesionId }, data: { estado: 'completada' } })
+
+  // Summary emails — non-blocking
+  sendSessionSummaryStudent({
+    to: sesion.user.email,
+    studentName: sesion.user.nombre,
+    asesorName: sesion.asesor.nombre,
+    fechaHora: sesion.fechaHora,
+    temasDiscutidos: temas,
+    compromisosProximaSemana: compromisos,
+    patronesIdentificados: patrones,
+    notasImportantes,
+  }).catch(() => {})
+
+  sendSessionSummaryAsesor({
+    to: sesion.asesor.email,
+    asesorName: sesion.asesor.nombre,
+    studentName: sesion.user.nombre,
+    fechaHora: sesion.fechaHora,
+    temasDiscutidos: temas,
+    compromisosProximaSemana: compromisos,
+    patronesIdentificados: patrones,
+    notasImportantes,
+  }).catch(() => {})
 
   res.json(obs)
 }
