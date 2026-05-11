@@ -30,6 +30,7 @@ model User {
   sesiones          Sesion[]
   moodCheckins      MoodCheckin[]
   pushSubscriptions PushSubscription[]
+  pactoPartner      PactoPartner?
 }
 
 model PerfilFinanciero {
@@ -157,6 +158,43 @@ model VerificationToken {
   createdAt DateTime @default(now())
 
   @@unique([userId, type])
+  @@index([userId])
+}
+
+model PactoPartner {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nombre    String
+  telefono  String?
+  token     String   @unique @default(cuid())
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  alertas   PactoAlerta[]
+
+  @@index([token])
+}
+
+model PactoAlerta {
+  id               String       @id @default(cuid())
+  partnerId        String
+  partner          PactoPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  userId           String
+  monto            Float
+  categoria        String
+  descripcion      String?
+  nivelRiesgo      String       // 'medio' | 'alto'
+  razonesRiesgo    String[]
+  mensajeIA        String?
+  estado           String       @default("pendiente") // 'pendiente' | 'aprobado' | 'rechazado' | 'ignorado' | 'expirado'
+  respuestaMensaje String?
+  respondedAt      DateTime?
+  expiresAt        DateTime
+  createdAt        DateTime     @default(now())
+
+  @@index([partnerId])
   @@index([userId])
 }
 

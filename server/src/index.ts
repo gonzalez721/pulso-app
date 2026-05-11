@@ -14,6 +14,7 @@ import insightRoutes from './routes/insights'
 import moodRoutes from './routes/mood'
 import asesorRoutes from './routes/asesor'
 import pushRoutes from './routes/push'
+import pactoRoutes from './routes/pacto'
 import { errorHandler, notFound } from './middleware/errorHandler'
 import { startCronJobs } from './cron'
 import { sendVerificationEmail } from './lib/resend'
@@ -92,6 +93,7 @@ app.use('/api/insights', insightRoutes)
 app.use('/api/mood', moodRoutes)
 app.use('/api/asesor', asesorRoutes)
 app.use('/api/push',  pushRoutes)
+app.use('/api/pacto', pactoRoutes)
 
 // Error handling
 app.use(notFound)

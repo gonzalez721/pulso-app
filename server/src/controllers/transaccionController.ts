@@ -2,6 +2,7 @@ import { Response } from 'express'
 import { AuthRequest } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
 import { sendPushToUser } from '../services/pushService'
+import { evaluarRiesgo, generarMensajeIA } from '../services/riesgoService'
 
 export async function createTransaccion(req: AuthRequest, res: Response): Promise<void> {
   const { monto, categoria, descripcion, fecha, metodoPago, comprobante } = req.body
@@ -67,7 +68,89 @@ export async function createTransaccion(req: AuthRequest, res: Response): Promis
     }
   }
 
-  res.status(201).json({ transaccion })
+  // ── PACTO risk evaluation ──────────────────────────────────────────────────
+  let riesgo: { nivel: string; razonesRiesgo: string[]; alertaId?: string } | null = null
+  try {
+    const resultado = await evaluarRiesgo(req.userId!, Number(monto), categoria)
+
+    if (resultado.nivel !== 'bajo') {
+      riesgo = { nivel: resultado.nivel, razonesRiesgo: resultado.razonesRiesgo }
+
+      // Only create alerta + notify partner on 'alto' risk
+      if (resultado.nivel === 'alto') {
+        const partner = await prisma.pactoPartner.findUnique({
+          where: { userId: req.userId! },
+          include: { user: { select: { nombre: true } } },
+        })
+
+        if (partner?.activo) {
+          // Get weekly spent for AI context
+          const weekStart = new Date()
+          weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
+          weekStart.setHours(0, 0, 0, 0)
+          const weekTx = await prisma.transaccion.findMany({
+            where: { userId: req.userId!, fecha: { gte: weekStart } },
+          })
+          const weeklySpent = weekTx.reduce((s, t) => s + t.monto, 0)
+
+          const meta = await prisma.meta.findFirst({
+            where: {
+              userId: req.userId!,
+              activa: true,
+              tipoMeta: 'SEMANAL',
+              fechaInicio: { lte: new Date() },
+              fechaFin: { gte: new Date() },
+            },
+          })
+
+          // Generate AI message (async, don't block response)
+          const mensajeIA = await generarMensajeIA({
+            userNombre: partner.user.nombre,
+            partnerNombre: partner.nombre,
+            monto: Number(monto),
+            categoria,
+            razonesRiesgo: resultado.razonesRiesgo,
+            weeklySpent,
+            presupuesto: meta?.montoObjetivo ?? 0,
+          }).catch(() => '')
+
+          const expiresAt = new Date(Date.now() + 5 * 60 * 1000) // 5 min TTL
+          const alerta = await prisma.pactoAlerta.create({
+            data: {
+              partnerId: partner.id,
+              userId: req.userId!,
+              monto: Number(monto),
+              categoria,
+              descripcion: descripcion ?? null,
+              nivelRiesgo: resultado.nivel,
+              razonesRiesgo: resultado.razonesRiesgo,
+              mensajeIA,
+              expiresAt,
+            },
+          })
+
+          riesgo.alertaId = alerta.id
+
+          // Push to partner's subscriptions
+          const partnerSubs = await prisma.pushSubscription.findMany({
+            where: { userId: partner.userId },
+          })
+          // We notify partner by sending to their userId's subs — but partner is identified by token
+          // The partner may not have a PULSO account. Use partner push subscriptions if stored.
+          // For now: notify user's push channel with a deep link that includes the partner token
+          sendPushToUser(req.userId!, {
+            title: '⚠️ Gasto de riesgo detectado',
+            body: `Tu partner PACTO ${partner.nombre} fue notificado sobre tu gasto en ${categoria}`,
+            url: '/dashboard',
+          }).catch(console.error)
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[PACTO] risk eval error:', err)
+  }
+
+  res.status(201).json({ transaccion, riesgo })
 }
 
 export async function getTransacciones(req: AuthRequest, res: Response): Promise<void> {

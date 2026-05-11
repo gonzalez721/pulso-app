@@ -108,3 +108,27 @@ export const moodApi = {
   save: (data: { mood: string; nota?: string }) => api.post<MoodCheckin>('/mood', data),
   getRecent: (limit?: number) => api.get<MoodCheckin[]>('/mood', { params: { limit } }),
 }
+
+// PACTO
+export const pactoApi = {
+  getPartner: () =>
+    api.get<{ partner: { id: string; nombre: string; telefono?: string; token: string; activo: boolean; createdAt: string } | null }>('/pacto/partner'),
+
+  upsertPartner: (data: { nombre: string; telefono?: string }) =>
+    api.post<{ partner: { id: string; nombre: string; telefono?: string; token: string; activo: boolean } }>('/pacto/partner', data),
+
+  deletePartner: () => api.delete('/pacto/partner'),
+
+  getAlertaStatus: (alertaId: string) =>
+    api.get<{ alerta: { id: string; estado: string; respuestaMensaje: string | null; respondedAt: string | null } }>(`/pacto/alerta/${alertaId}/status`),
+
+  // Public (no auth — use raw fetch or separate client)
+  getPartnerPage: (token: string) =>
+    api.get<{ partner: { nombre: string; userNombre: string; userFotoUrl?: string } }>(`/pacto/p/${token}`),
+
+  getPartnerAlertas: (token: string) =>
+    api.get<{ alertas: any[]; userNombre: string }>(`/pacto/p/${token}/alertas`),
+
+  responderAlerta: (token: string, alertaId: string, data: { decision: 'aprobado' | 'rechazado'; mensaje?: string }) =>
+    api.post(`/pacto/p/${token}/alerta/${alertaId}/responder`, data),
+}

@@ -26,6 +26,7 @@ import { AsesorEstudianteHistoria } from './pages/asesor/AsesorEstudianteHistori
 import { AsesorPerfilPage } from './pages/asesor/AsesorPerfilPage'
 import { VerifyCodePage, AsesorVerifyCodePage } from './pages/VerifyCodePage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+import { PactoPartnerPage } from './pages/PactoPartnerPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -133,6 +134,9 @@ export default function App() {
             <Route path="disponibilidad" element={<AsesorDisponibilidadPage />} />
             <Route path="perfil" element={<AsesorPerfilPage />} />
           </Route>
+
+          {/* PACTO public partner page — no auth */}
+          <Route path="/pacto/:token" element={<PactoPartnerPage />} />
 
           {/* Landing — entrada unificada */}
           <Route path="/" element={<SmartHome />} />

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { LogOut, ChevronRight, Target, Bell, BellOff, HelpCircle, Briefcase, RefreshCw, Edit2 } from 'lucide-react'
+import { LogOut, ChevronRight, Target, Bell, BellOff, HelpCircle, Briefcase, RefreshCw, Edit2, Shield, Share2, Trash2, Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useLogout, useProfile } from '../../hooks/useAuth'
@@ -8,6 +8,7 @@ import { useActiveMetas, useCreateMeta } from '../../hooks/useTransacciones'
 import { useTourStore } from '../../store/tourStore'
 import { userApi } from '../../api/endpoints'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
+import { usePactoPartner, useUpsertPartner, useDeletePartner } from '../../hooks/usePacto'
 
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -17,6 +18,163 @@ import { AvatarUpload } from '../../components/ui/AvatarUpload'
 import { formatCurrency, getWeekStart, getWeekEnd } from '../../lib/utils'
 
 const HORAS_PRESETS = [10, 20, 30, 40, 48]
+
+const API_BASE = import.meta.env.VITE_API_URL ?? 'https://pulso-app.onrender.com/api'
+
+function PactoSection() {
+  const { data: partner, isLoading } = usePactoPartner()
+  const { mutate: upsert, isPending: saving } = useUpsertPartner()
+  const { mutate: remove, isPending: removing } = useDeletePartner()
+  const [showModal, setShowModal] = useState(false)
+  const [nombre, setNombre] = useState('')
+  const [telefono, setTelefono] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  const openAdd = () => {
+    setNombre(partner?.nombre ?? '')
+    setTelefono(partner?.telefono ?? '')
+    setShowModal(true)
+  }
+
+  const save = () => {
+    if (!nombre.trim()) return
+    upsert({ nombre: nombre.trim(), telefono: telefono.trim() || undefined }, {
+      onSuccess: () => setShowModal(false),
+    })
+  }
+
+  const partnerLink = partner
+    ? `${window.location.origin}/pacto/${partner.token}`
+    : null
+
+  const shareWhatsApp = () => {
+    if (!partnerLink || !partner) return
+    const msg = encodeURIComponent(
+      `Hola ${partner.nombre} 👋 Te invito a ser mi partner PACTO en PULSO. Cuando haga gastos de riesgo te voy a notificar para que me ayudes a decidir. Entra aquí: ${partnerLink}`
+    )
+    window.open(`https://wa.me/?text=${msg}`, '_blank')
+  }
+
+  const copyLink = () => {
+    if (!partnerLink) return
+    navigator.clipboard.writeText(partnerLink)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  if (isLoading) return null
+
+  return (
+    <>
+      <Card animate>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-2xl bg-surface-elevated border border-border-light flex items-center justify-center">
+            <Shield size={18} className="text-primary-dark" />
+          </div>
+          <div className="flex-1">
+            <p className="font-bold text-white text-sm">Partner PACTO</p>
+            <p className="text-text-muted text-xs">
+              {partner ? `${partner.nombre} te cuida la espalda` : 'Invita a alguien de confianza'}
+            </p>
+          </div>
+          {partner ? (
+            <button
+              onClick={openAdd}
+              className="w-8 h-8 rounded-xl bg-surface-elevated border border-border-light flex items-center justify-center hover:border-white/30 transition-colors"
+            >
+              <Edit2 size={13} className="text-text-muted" />
+            </button>
+          ) : (
+            <button
+              onClick={openAdd}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+              style={{ background: 'rgba(124,77,255,0.1)', border: '1px solid rgba(124,77,255,0.3)', color: '#A890FF' }}
+            >
+              <Plus size={12} /> Agregar
+            </button>
+          )}
+        </div>
+
+        {partner && (
+          <div className="space-y-2">
+            <div className="rounded-2xl px-4 py-3 flex items-center gap-3"
+              style={{ background: 'rgba(124,77,255,0.06)', border: '1px solid rgba(124,77,255,0.2)' }}>
+              <div className="w-8 h-8 rounded-xl bg-primary-dark/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm">🤝</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-white text-sm">{partner.nombre}</p>
+                {partner.telefono && <p className="text-xs text-text-muted">{partner.telefono}</p>}
+              </div>
+              <button
+                onClick={() => remove()}
+                disabled={removing}
+                className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-red-500/10 transition-colors"
+              >
+                <Trash2 size={13} className="text-red-400/60 hover:text-red-400" />
+              </button>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={shareWhatsApp}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-xs font-bold transition-all"
+                style={{ background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.25)', color: '#25D366' }}
+              >
+                <Share2 size={12} /> Invitar por WhatsApp
+              </button>
+              <button
+                onClick={copyLink}
+                className="px-4 py-2.5 rounded-2xl text-xs font-bold transition-all"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: copied ? '#A8FF3E' : '#fff' }}
+              >
+                {copied ? '¡Copiado!' : 'Copiar link'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!partner && (
+          <p className="text-xs text-text-dim leading-relaxed">
+            Cuando hagas un gasto de riesgo, PULSO pausará tu pantalla y notificará a tu partner para que te ayude a decidir.
+          </p>
+        )}
+      </Card>
+
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={partner ? 'Editar partner' : 'Agregar partner PACTO'}>
+        <div className="px-5 py-4 space-y-4">
+          <div>
+            <label className="text-sm font-semibold text-white mb-2 block">Nombre</label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              placeholder="Nombre de tu amigo o familiar"
+              className="w-full bg-surface-elevated border border-border-light rounded-2xl px-4 py-3 text-white placeholder-text-dim focus:outline-none focus:border-neon-green/60 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-white mb-2 block">Teléfono (opcional, para WhatsApp)</label>
+            <input
+              type="tel"
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              placeholder="+57 300 000 0000"
+              className="w-full bg-surface-elevated border border-border-light rounded-2xl px-4 py-3 text-white placeholder-text-dim focus:outline-none focus:border-neon-green/60 text-sm"
+            />
+          </div>
+          <div className="rounded-2xl p-4 text-xs text-text-muted leading-relaxed"
+            style={{ background: 'rgba(124,77,255,0.06)', border: '1px solid rgba(124,77,255,0.15)' }}>
+            🔒 Tu partner solo verá tus alertas de gasto cuando haya riesgo. Nunca verá tu saldo ni historial completo.
+          </div>
+          <Button onClick={save} loading={saving} disabled={!nombre.trim()} fullWidth size="lg">
+            Guardar partner
+          </Button>
+        </div>
+      </Modal>
+    </>
+  )
+}
 
 export function ProfilePage() {
   const navigate = useNavigate()
@@ -204,6 +362,9 @@ export function ProfilePage() {
           </div>
         ) : null}
       </Card>
+
+      {/* PACTO Partner */}
+      <PactoSection />
 
       {/* Push notifications toggle */}
       {push.supported && (

@@ -8,9 +8,10 @@ interface ModalProps {
   title?: string
   children: ReactNode
   fullScreen?: boolean
+  hideClose?: boolean    // suppress X button and backdrop tap
 }
 
-export function Modal({ open, onClose, title, children, fullScreen }: ModalProps) {
+export function Modal({ open, onClose, title, children, fullScreen, hideClose }: ModalProps) {
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden'
     else document.body.style.overflow = ''
@@ -28,7 +29,7 @@ export function Modal({ open, onClose, title, children, fullScreen }: ModalProps
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
-            onClick={onClose}
+            onClick={hideClose ? undefined : onClose}
           />
           {/* Sheet */}
           <motion.div
@@ -51,12 +52,14 @@ export function Modal({ open, onClose, title, children, fullScreen }: ModalProps
             {title && (
               <div className="flex items-center justify-between px-5 py-4 border-b border-border-light">
                 <h2 className="text-lg font-bold font-display text-white">{title}</h2>
-                <button
-                  onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-surface-elevated flex items-center justify-center hover:bg-border-light transition-colors"
-                >
-                  <X size={16} className="text-text-muted" />
-                </button>
+                {!hideClose && (
+                  <button
+                    onClick={onClose}
+                    className="w-8 h-8 rounded-full bg-surface-elevated flex items-center justify-center hover:bg-border-light transition-colors"
+                  >
+                    <X size={16} className="text-text-muted" />
+                  </button>
+                )}
               </div>
             )}
             {/* Content */}
