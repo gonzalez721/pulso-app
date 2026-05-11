@@ -47,6 +47,8 @@ export const userApi = {
     presupuestoSemanal?: number
     onboardingComplete?: boolean
   }) => api.patch<User>('/user/profile', data),
+
+  updateFoto: (fotoUrl: string) => api.patch<{ id: string; fotoUrl: string }>('/user/foto', { fotoUrl }),
 }
 
 // Transacciones

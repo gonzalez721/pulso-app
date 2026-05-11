@@ -237,6 +237,22 @@ export async function updateAsesorProfile(req: AsesorRequest, res: Response): Pr
   res.json(updated)
 }
 
+export async function updateAsesorFoto(req: AsesorRequest, res: Response): Promise<void> {
+  const { fotoUrl } = req.body
+  if (!fotoUrl || typeof fotoUrl !== 'string') {
+    res.status(400).json({ error: 'fotoUrl requerida' }); return
+  }
+  if (!fotoUrl.startsWith('data:image/') && !fotoUrl.startsWith('https://')) {
+    res.status(400).json({ error: 'Formato de imagen inválido' }); return
+  }
+  const asesor = await prisma.asesor.update({
+    where: { id: req.asesorId },
+    data: { fotoUrl },
+    select: { id: true, fotoUrl: true },
+  })
+  res.json(asesor)
+}
+
 export async function getAsesorSesiones(req: AsesorRequest, res: Response): Promise<void> {
   const { estado } = req.query
 
@@ -248,7 +264,7 @@ export async function getAsesorSesiones(req: AsesorRequest, res: Response): Prom
     include: {
       user: {
         select: {
-          id: true, nombre: true, email: true, universidad: true, semestre: true,
+          id: true, nombre: true, email: true, universidad: true, semestre: true, fotoUrl: true,
           perfil: {
             select: { objetivo: true, resumenIA: true, categoriasGasto: true, dificultadesReportadas: true },
           },

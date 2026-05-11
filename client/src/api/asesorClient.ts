@@ -74,6 +74,8 @@ export const asesorEndpoints = {
   updateMe: (data: { nombre?: string; bio?: string; carrera?: string; semestre?: number }) =>
     asesorApi.patch('/me', data),
 
+  updateFoto: (fotoUrl: string) => asesorApi.patch<{ id: string; fotoUrl: string }>('/foto', { fotoUrl }),
+
   getSesiones: (estado?: string) =>
     asesorApi.get<any[]>('/sesiones', { params: estado ? { estado } : {} }),
 

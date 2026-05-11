@@ -139,3 +139,20 @@ export async function updateProfile(req: AuthRequest, res: Response): Promise<vo
 
   res.json(updatedUser)
 }
+
+export async function updateFoto(req: AuthRequest, res: Response): Promise<void> {
+  const { fotoUrl } = req.body
+  if (!fotoUrl || typeof fotoUrl !== 'string') {
+    res.status(400).json({ error: 'fotoUrl requerida' }); return
+  }
+  // Accept data URLs (base64) or https URLs
+  if (!fotoUrl.startsWith('data:image/') && !fotoUrl.startsWith('https://')) {
+    res.status(400).json({ error: 'Formato de imagen inválido' }); return
+  }
+  const user = await prisma.user.update({
+    where: { id: req.userId },
+    data: { fotoUrl },
+    select: { id: true, fotoUrl: true },
+  })
+  res.json(user)
+}

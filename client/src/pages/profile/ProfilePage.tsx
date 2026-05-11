@@ -13,6 +13,7 @@ import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { AmountInput } from '../../components/ui/AmountInput'
 import { Modal } from '../../components/ui/Modal'
+import { AvatarUpload } from '../../components/ui/AvatarUpload'
 import { formatCurrency, getWeekStart, getWeekEnd } from '../../lib/utils'
 
 const HORAS_PRESETS = [10, 20, 30, 40, 48]
@@ -89,9 +90,15 @@ export function ProfilePage() {
       {/* Avatar + name */}
       <Card animate>
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-dark to-purple-900 flex items-center justify-center flex-shrink-0 shadow-glow">
-            <span className="text-2xl font-extrabold text-white">{initials}</span>
-          </div>
+          <AvatarUpload
+            currentUrl={user?.fotoUrl}
+            initials={initials ?? '?'}
+            size={64}
+            onUpload={async (dataUrl) => {
+              const { data } = await userApi.updateFoto(dataUrl)
+              if (user) setUser({ ...user, fotoUrl: data.fotoUrl })
+            }}
+          />
           <div className="flex-1 min-w-0">
             <p className="font-extrabold text-white text-lg truncate">{user?.nombre}</p>
             <p className="text-sm text-text-muted truncate">{user?.email}</p>

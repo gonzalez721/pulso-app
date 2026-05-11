@@ -101,7 +101,10 @@ export function AsesorSesionDetail() {
 
         <div className="flex items-start gap-4">
           <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-xl font-bold flex-shrink-0 overflow-hidden">
-            {student?.nombre ? getInitials(student.nombre) : '?'}
+            {student?.fotoUrl
+              ? <img src={student.fotoUrl} alt={student.nombre} className="w-full h-full object-cover" />
+              : (student?.nombre ? getInitials(student.nombre) : '?')
+            }
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-extrabold text-white">{student?.nombre ?? '—'}</h1>

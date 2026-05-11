@@ -3,7 +3,7 @@ import {
   asesorRegister, asesorLogin, asesorRefresh,
   asesorVerifyCode, asesorResendVerification,
   asesorForgotPassword, asesorResetPassword,
-  getAsesorProfile, updateAsesorProfile, getAsesorSesiones,
+  getAsesorProfile, updateAsesorProfile, updateAsesorFoto, getAsesorSesiones,
   getEstudianteStats, getEstudianteHistoria, saveObservacion,
   updateDisponibilidad, updateSesionStatus,
 } from '../controllers/asesorController'
@@ -24,6 +24,7 @@ router.post('/reset-password',       asesorResetPassword)
 // Protected — asesor only
 router.get('/me',                                    requireAsesorAuth, getAsesorProfile)
 router.patch('/me',                                  requireAsesorAuth, updateAsesorProfile)
+router.patch('/foto',                                requireAsesorAuth, updateAsesorFoto)
 router.patch('/disponibilidad',                      requireAsesorAuth, updateDisponibilidad)
 router.get('/sesiones',                              requireAsesorAuth, getAsesorSesiones)
 router.get('/estudiante/:userId/stats',              requireAsesorAuth, getEstudianteStats)

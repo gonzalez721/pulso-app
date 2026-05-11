@@ -10,6 +10,7 @@ import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { getInitials } from '../../lib/utils'
 import { Modal } from '../../components/ui/Modal'
 import { Button } from '../../components/ui/Button'
+import { AvatarUpload } from '../../components/ui/AvatarUpload'
 
 function EditModal({
   open, onClose, asesor, onSaved,
@@ -112,12 +113,15 @@ export function AsesorPerfilPage() {
         style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
       >
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-dark to-purple-900 flex items-center justify-center flex-shrink-0 shadow-glow">
-            {asesor.fotoUrl
-              ? <img src={asesor.fotoUrl} className="w-full h-full object-cover rounded-2xl" alt="" />
-              : <span className="text-2xl font-extrabold text-white">{initials}</span>
-            }
-          </div>
+          <AvatarUpload
+            currentUrl={asesor.fotoUrl}
+            initials={initials}
+            size={64}
+            onUpload={async (dataUrl) => {
+              const { data } = await asesorEndpoints.updateFoto(dataUrl)
+              setAsesor({ ...asesor, fotoUrl: data.fotoUrl })
+            }}
+          />
           <div className="flex-1 min-w-0">
             <p className="font-extrabold text-white text-lg truncate">{asesor.nombre}</p>
             <p className="text-sm text-text-muted truncate">{asesor.email}</p>

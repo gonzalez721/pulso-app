@@ -8,6 +8,7 @@ export interface User {
   ingresoMensual?: number
   horasTrabajoSemanal?: number
   appsPago: string[]
+  fotoUrl?: string
   onboardingComplete: boolean
   emailVerified?: boolean
   createdAt: string

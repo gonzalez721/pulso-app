@@ -131,8 +131,11 @@ function SesionCard({ sesion, index, onClick }: {
         onClick={onClick}
         className="w-full p-4 flex items-center gap-3 text-left hover:bg-surface-elevated/50 transition-colors"
       >
-        <div className="w-11 h-11 rounded-2xl bg-surface-elevated border border-border-light flex items-center justify-center flex-shrink-0 font-bold text-primary-dark text-sm">
-          {getInitials(student?.nombre ?? 'E')}
+        <div className="w-11 h-11 rounded-2xl bg-surface-elevated border border-border-light flex items-center justify-center flex-shrink-0 overflow-hidden">
+          {student?.fotoUrl
+            ? <img src={student.fotoUrl} alt={student.nombre} className="w-full h-full object-cover" />
+            : <span className="font-bold text-primary-dark text-sm">{getInitials(student?.nombre ?? 'E')}</span>
+          }
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
