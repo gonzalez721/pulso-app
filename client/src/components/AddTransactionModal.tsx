@@ -8,7 +8,7 @@ import { Input } from './ui/Input'
 import { CategoryPill } from './ui/CategoryPill'
 import { PactoAlertaModal } from './PactoAlertaModal'
 import { CATEGORIAS } from '../types'
-import { useCreateTransaccion } from '../hooks/useTransacciones'
+import { useCreateTransaccion, useDeleteTransaccion } from '../hooks/useTransacciones'
 import { usePactoPartner } from '../hooks/usePacto'
 import { useAuthStore } from '../store/authStore'
 
@@ -46,8 +46,10 @@ export function AddTransactionModal({ open, onClose }: Props) {
   // PACTO pause state
   const [showPacto, setShowPacto] = useState(false)
   const [pactoRiesgo, setPactoRiesgo] = useState<{ nivel: 'medio' | 'alto'; razonesRiesgo: string[]; alertaId?: string } | null>(null)
+  const [lastTransaccionId, setLastTransaccionId] = useState<string | null>(null)
 
   const { mutate, isPending } = useCreateTransaccion()
+  const { mutate: deleteTransaccion } = useDeleteTransaccion()
   const user = useAuthStore((s) => s.user)
   const navigate = useNavigate()
   const { data: pactoData } = usePactoPartner()
@@ -63,6 +65,7 @@ export function AddTransactionModal({ open, onClose }: Props) {
     setError('')
     setShowPacto(false)
     setPactoRiesgo(null)
+    setLastTransaccionId(null)
   }
 
   const handleClose = () => {
@@ -84,7 +87,8 @@ export function AddTransactionModal({ open, onClose }: Props) {
         onSuccess: (data: any) => {
           const riesgo = data?.riesgo
           if (riesgo && (riesgo.nivel === 'medio' || riesgo.nivel === 'alto')) {
-            // Show PACTO pause screen before closing
+            // Save transaction ID so we can delete it if user cancels
+            setLastTransaccionId(data?.transaccion?.id ?? null)
             setPactoRiesgo(riesgo)
             setShowPacto(true)
           } else {
@@ -242,7 +246,13 @@ export function AddTransactionModal({ open, onClose }: Props) {
         categoria={categoria}
         partnerNombre={partner?.nombre ?? null}
         onContinue={handleClose}
-        onCancel={handleClose}
+        onCancel={() => {
+          // Delete the transaction that was just saved
+          if (lastTransaccionId) {
+            deleteTransaccion(lastTransaccionId)
+          }
+          handleClose()
+        }}
       />
     </>
   )

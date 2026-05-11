@@ -31,6 +31,19 @@ export function useCreateTransaccion() {
   })
 }
 
+export function useDeleteTransaccion() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => transaccionApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['weekly-summary'] })
+      queryClient.invalidateQueries({ queryKey: ['transacciones'] })
+      queryClient.invalidateQueries({ queryKey: ['metas-active'] })
+    },
+  })
+}
+
 export function useActiveMetas() {
   return useQuery({
     queryKey: ['metas-active'],

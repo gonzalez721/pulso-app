@@ -64,6 +64,8 @@ export const transaccionApi = {
   getAll: (params?: { limit?: number; offset?: number; categoria?: string; desde?: string; hasta?: string }) =>
     api.get<{ transacciones: Transaccion[]; total: number }>('/transacciones', { params }),
 
+  delete: (id: string) => api.delete(`/transacciones/${id}`),
+
   getWeeklySummary: (semana?: string) =>
     api.get<WeeklySummary>('/transacciones/weekly-summary', { params: semana ? { semana } : {} }),
 }

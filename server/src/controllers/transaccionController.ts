@@ -154,6 +154,35 @@ export async function createTransaccion(req: AuthRequest, res: Response): Promis
   res.status(201).json({ transaccion, riesgo })
 }
 
+export async function deleteTransaccion(req: AuthRequest, res: Response): Promise<void> {
+  const { id } = req.params
+  const tx = await prisma.transaccion.findFirst({ where: { id, userId: req.userId! } })
+  if (!tx) { res.status(404).json({ error: 'Transacción no encontrada' }); return }
+
+  await prisma.transaccion.delete({ where: { id } })
+
+  // Roll back the meta if applicable
+  if (tx.monto > 0) {
+    const meta = await prisma.meta.findFirst({
+      where: {
+        userId: req.userId!,
+        activa: true,
+        tipoMeta: 'SEMANAL',
+        fechaInicio: { lte: tx.fecha },
+        fechaFin: { gte: tx.fecha },
+      },
+    })
+    if (meta) {
+      await prisma.meta.update({
+        where: { id: meta.id },
+        data: { montoGastado: { decrement: tx.monto } },
+      })
+    }
+  }
+
+  res.json({ ok: true })
+}
+
 export async function getTransacciones(req: AuthRequest, res: Response): Promise<void> {
   const { limit = '20', offset = '0', categoria, desde, hasta } = req.query
 
