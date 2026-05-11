@@ -83,10 +83,10 @@ export async function asesorLogin(req: Request, res: Response): Promise<void> {
   }
 
   const asesor = await prisma.asesor.findUnique({ where: { email: email.toLowerCase() } })
-  if (!asesor || !asesor.password) { res.status(401).json({ error: 'Credenciales incorrectas' }); return }
+  if (!asesor || !asesor.password) { res.status(401).json({ error: 'No existe una cuenta de asesor con ese correo.' }); return }
 
   const valid = await bcrypt.compare(password, asesor.password)
-  if (!valid) { res.status(401).json({ error: 'Credenciales incorrectas' }); return }
+  if (!valid) { res.status(401).json({ error: 'Contraseña incorrecta. Intenta de nuevo.' }); return }
 
 
   const payload = { userId: asesor.id, email: asesor.email, role: 'asesor' } as any

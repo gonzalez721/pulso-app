@@ -99,13 +99,13 @@ export async function login(req: Request, res: Response): Promise<void> {
 
   const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } })
   if (!user) {
-    res.status(401).json({ error: 'Credenciales incorrectas' })
+    res.status(401).json({ error: 'No existe una cuenta con ese correo. ¿Quieres registrarte?' })
     return
   }
 
   const valid = await bcrypt.compare(password, user.password)
   if (!valid) {
-    res.status(401).json({ error: 'Credenciales incorrectas' })
+    res.status(401).json({ error: 'Contraseña incorrecta. Intenta de nuevo.' })
     return
   }
 
