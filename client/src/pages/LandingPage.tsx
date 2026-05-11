@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { useRef, useState } from 'react'
 
 /* ─── helpers ─── */
 function FadeUp({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
@@ -119,12 +119,92 @@ function PhoneMock() {
   )
 }
 
+/* ─── Role selection bottom sheet ─── */
+function RoleSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const navigate = useNavigate()
+
+  const pick = (path: string) => { onClose(); navigate(path) }
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-50"
+            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}
+          />
+
+          {/* Sheet */}
+          <motion.div
+            key="sheet"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed bottom-0 inset-x-0 z-50 rounded-t-3xl px-5 pt-5 pb-10"
+            style={{ background: '#10101e', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            {/* Handle */}
+            <div className="w-10 h-1 rounded-full mx-auto mb-6" style={{ background: 'rgba(255,255,255,0.15)' }} />
+
+            <h3 className="font-extrabold text-white text-xl font-display text-center mb-2">¿Cómo quieres entrar?</h3>
+            <p className="text-sm text-center mb-7" style={{ color: '#8B8BA7' }}>Elige tu rol para crear tu cuenta</p>
+
+            {/* Estudiante */}
+            <button
+              onClick={() => pick('/register')}
+              className="w-full rounded-3xl p-5 mb-3 flex items-center gap-4 text-left transition-all active:scale-[0.98]"
+              style={{ background: 'rgba(124,77,255,0.1)', border: '1px solid rgba(124,77,255,0.3)' }}
+            >
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+                style={{ background: 'rgba(124,77,255,0.15)', border: '1px solid rgba(124,77,255,0.3)' }}
+              >🎒</div>
+              <div>
+                <p className="font-extrabold text-white text-base font-display">Soy estudiante</p>
+                <p className="text-sm" style={{ color: '#8B8BA7' }}>Controla tus gastos y ahorra más</p>
+              </div>
+              <span className="ml-auto text-xl" style={{ color: '#7C4DFF' }}>→</span>
+            </button>
+
+            {/* Asesor */}
+            <button
+              onClick={() => pick('/asesor/register')}
+              className="w-full rounded-3xl p-5 flex items-center gap-4 text-left transition-all active:scale-[0.98]"
+              style={{ background: 'rgba(168,255,62,0.06)', border: '1px solid rgba(168,255,62,0.2)' }}
+            >
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+                style={{ background: 'rgba(168,255,62,0.1)', border: '1px solid rgba(168,255,62,0.25)' }}
+              >🎓</div>
+              <div>
+                <p className="font-extrabold text-white text-base font-display">Soy asesor</p>
+                <p className="text-sm" style={{ color: '#8B8BA7' }}>Acompaña a estudiantes financieramente</p>
+              </div>
+              <span className="ml-auto text-xl" style={{ color: '#A8FF3E' }}>→</span>
+            </button>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  )
+}
+
 /* ─── Main ─── */
 export function LandingPage() {
   const navigate = useNavigate()
+  const [showRoleSheet, setShowRoleSheet] = useState(false)
 
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: '#080810', color: '#fff' }}>
+
+      <RoleSheet open={showRoleSheet} onClose={() => setShowRoleSheet(false)} />
 
       {/* ══════ NAV ══════ */}
       <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-5 py-4"
@@ -135,7 +215,7 @@ export function LandingPage() {
           <span className="font-extrabold text-sm tracking-widest text-white font-display">PULSO+PACTO</span>
         </div>
         <button
-          onClick={() => navigate('/register')}
+          onClick={() => setShowRoleSheet(true)}
           className="text-xs font-bold px-4 py-2 rounded-full transition-all"
           style={{ background: 'rgba(168,255,62,0.12)', border: '1px solid rgba(168,255,62,0.3)', color: '#A8FF3E' }}
         >
@@ -192,7 +272,7 @@ export function LandingPage() {
           className="flex flex-col gap-3 w-full max-w-xs mx-auto mb-16"
         >
           <button
-            onClick={() => navigate('/register')}
+            onClick={() => setShowRoleSheet(true)}
             className="w-full py-4 rounded-2xl font-extrabold text-base transition-all active:scale-[0.97]"
             style={{
               background: '#A8FF3E',
@@ -542,8 +622,8 @@ export function LandingPage() {
             </p>
 
             <button
-              onClick={() => navigate('/register')}
-              className="w-full py-4 rounded-2xl font-extrabold text-base transition-all active:scale-[0.97] mb-3"
+              onClick={() => setShowRoleSheet(true)}
+              className="w-full py-4 rounded-2xl font-extrabold text-base transition-all active:scale-[0.97]"
               style={{
                 background: '#A8FF3E',
                 color: '#080810',
@@ -552,14 +632,6 @@ export function LandingPage() {
               }}
             >
               Crear cuenta gratis →
-            </button>
-
-            <button
-              onClick={() => navigate('/asesor/login')}
-              className="w-full py-3 rounded-2xl font-semibold text-sm transition-all"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#8B8BA7' }}
-            >
-              🎓 Soy asesor financiero
             </button>
           </div>
         </FadeUp>
