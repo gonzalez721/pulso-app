@@ -3,47 +3,97 @@ import { AuthRequest } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
 import { sendPushToUser } from '../services/pushService'
 
-// ─── User-auth routes ─────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** GET /api/pacto/partner — get current user's outgoing partner invite */
-export async function getPartner(req: AuthRequest, res: Response): Promise<void> {
-  // User may be the inviter OR the invited
-  const asInviter = await prisma.pactoPartner.findUnique({
-    where: { userId: req.userId! },
-    select: { id: true, nombre: true, telefono: true, token: true, activo: true, estado: true, partnerUserId: true, createdAt: true },
-  })
-  // User may also be the invited party
-  const asInvited = await prisma.pactoPartner.findUnique({
-    where: { partnerUserId: req.userId! },
-    include: { user: { select: { nombre: true, fotoUrl: true } } },
-  })
-  res.json({ partner: asInviter, asInvited: asInvited ? { inviterNombre: asInvited.user.nombre, inviterFotoUrl: asInvited.user.fotoUrl, estado: asInvited.estado } : null })
+async function weeklyStats(userId: string) {
+  const now = new Date()
+  const weekStart = new Date(now)
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
+  weekStart.setHours(0, 0, 0, 0)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekStart.getDate() + 6)
+  weekEnd.setHours(23, 59, 59, 999)
+
+  const [user, tx, meta] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { nombre: true, fotoUrl: true } }),
+    prisma.transaccion.findMany({ where: { userId, fecha: { gte: weekStart, lte: weekEnd } } }),
+    prisma.meta.findFirst({ where: { userId, activa: true, tipoMeta: 'SEMANAL', fechaInicio: { lte: now }, fechaFin: { gte: now } } }),
+  ])
+
+  const spent = tx.reduce((s, t) => s + t.monto, 0)
+  const budget = meta?.montoObjetivo ?? 0
+  const pct = budget > 0 ? Math.round((spent / budget) * 100) : null
+  const byCategory: Record<string, number> = {}
+  for (const t of tx) byCategory[t.categoria] = (byCategory[t.categoria] ?? 0) + t.monto
+
+  return { nombre: user?.nombre ?? '', fotoUrl: user?.fotoUrl ?? null, spent, budget, pct, byCategory, txCount: tx.length }
 }
 
-/** POST /api/pacto/partner — create or update partner invite */
-export async function upsertPartner(req: AuthRequest, res: Response): Promise<void> {
+// ─── User-auth routes ─────────────────────────────────────────────────────────
+
+/** GET /api/pacto/partners — all partners for current user */
+export async function getPartners(req: AuthRequest, res: Response): Promise<void> {
+  const userId = req.userId!
+
+  // As inviter
+  const outgoing = await prisma.pactoPartner.findMany({
+    where: { userId, activo: true },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, nombre: true, telefono: true, token: true, estado: true, partnerUserId: true, createdAt: true },
+  })
+
+  // As invited (where this user is the accepted partner)
+  const incoming = await prisma.pactoPartner.findMany({
+    where: { partnerUserId: userId, activo: true },
+    include: { user: { select: { nombre: true, fotoUrl: true } } },
+  })
+
+  res.json({
+    partners: outgoing,
+    asInvited: incoming.map((p) => ({
+      id: p.id,
+      inviterNombre: p.user.nombre,
+      inviterFotoUrl: p.user.fotoUrl,
+      estado: p.estado,
+    })),
+  })
+}
+
+/** POST /api/pacto/partner — create a new partner invite */
+export async function createPartner(req: AuthRequest, res: Response): Promise<void> {
   const { nombre, telefono } = req.body
   if (!nombre?.trim()) {
-    res.status(400).json({ error: 'El nombre del partner es requerido' })
-    return
+    res.status(400).json({ error: 'El nombre del partner es requerido' }); return
   }
 
-  const existing = await prisma.pactoPartner.findUnique({ where: { userId: req.userId! } })
-  const partner = existing
-    ? await prisma.pactoPartner.update({
-        where: { userId: req.userId! },
-        data: { nombre: nombre.trim(), telefono: telefono?.trim() || null, activo: true },
-      })
-    : await prisma.pactoPartner.create({
-        data: { userId: req.userId!, nombre: nombre.trim(), telefono: telefono?.trim() || null },
-      })
+  const partner = await prisma.pactoPartner.create({
+    data: { userId: req.userId!, nombre: nombre.trim(), telefono: telefono?.trim() || null },
+  })
 
   res.json({ partner })
 }
 
-/** DELETE /api/pacto/partner — remove partner invite */
+/** PATCH /api/pacto/partner/:partnerId — update partner name/phone */
+export async function updatePartner(req: AuthRequest, res: Response): Promise<void> {
+  const { partnerId } = req.params
+  const { nombre, telefono } = req.body
+
+  const existing = await prisma.pactoPartner.findFirst({ where: { id: partnerId, userId: req.userId! } })
+  if (!existing) { res.status(404).json({ error: 'Partner no encontrado' }); return }
+
+  const updated = await prisma.pactoPartner.update({
+    where: { id: partnerId },
+    data: { nombre: nombre?.trim() ?? existing.nombre, telefono: telefono?.trim() || null },
+  })
+  res.json({ partner: updated })
+}
+
+/** DELETE /api/pacto/partner/:partnerId — remove a specific partner */
 export async function deletePartner(req: AuthRequest, res: Response): Promise<void> {
-  await prisma.pactoPartner.deleteMany({ where: { userId: req.userId! } })
+  const { partnerId } = req.params
+  const existing = await prisma.pactoPartner.findFirst({ where: { id: partnerId, userId: req.userId! } })
+  if (!existing) { res.status(404).json({ error: 'Partner no encontrado' }); return }
+  await prisma.pactoPartner.delete({ where: { id: partnerId } })
   res.json({ ok: true })
 }
 
@@ -53,14 +103,10 @@ export async function acceptPacto(req: AuthRequest, res: Response): Promise<void
   if (!token) { res.status(400).json({ error: 'Token requerido' }); return }
 
   const partner = await prisma.pactoPartner.findUnique({ where: { token } })
-  if (!partner || !partner.activo) {
-    res.status(404).json({ error: 'Invitación no válida' }); return
-  }
-  if (partner.userId === req.userId!) {
-    res.status(400).json({ error: 'No puedes ser tu propio partner' }); return
-  }
+  if (!partner || !partner.activo) { res.status(404).json({ error: 'Invitación no válida' }); return }
+  if (partner.userId === req.userId!) { res.status(400).json({ error: 'No puedes ser tu propio partner' }); return }
   if (partner.partnerUserId && partner.partnerUserId !== req.userId!) {
-    res.status(409).json({ error: 'Este link ya fue usado por otra persona' }); return
+    res.status(409).json({ error: 'Este link ya fue usado' }); return
   }
 
   const updated = await prisma.pactoPartner.update({
@@ -68,89 +114,75 @@ export async function acceptPacto(req: AuthRequest, res: Response): Promise<void
     data: { partnerUserId: req.userId!, estado: 'aceptado' },
   })
 
-  // Notify the inviter
   const invited = await prisma.user.findUnique({ where: { id: req.userId! }, select: { nombre: true } })
   sendPushToUser(partner.userId, {
     title: '🤝 ¡Tu PACTO está activo!',
-    body: `${invited?.nombre ?? 'Tu partner'} aceptó la invitación. Ya pueden competir juntos.`,
+    body: `${invited?.nombre ?? 'Tu partner'} aceptó la invitación. ¡Ya pueden competir!`,
     url: '/pacto',
   }).catch(console.error)
 
   res.json({ ok: true, estado: updated.estado })
 }
 
-/** GET /api/pacto/dashboard — competitive stats for both users in the PACTO */
+/** GET /api/pacto/dashboard — competition stats for all accepted partners */
 export async function getDashboard(req: AuthRequest, res: Response): Promise<void> {
   const userId = req.userId!
 
-  // Find the partner relationship (either side)
-  const asInviter = await prisma.pactoPartner.findUnique({
-    where: { userId },
-    include: { user: { select: { nombre: true, fotoUrl: true } } },
-  })
-  const asInvited = await prisma.pactoPartner.findUnique({
-    where: { partnerUserId: userId },
-    include: { user: { select: { nombre: true, fotoUrl: true } } },
-  })
-
-  const link = asInviter ?? asInvited
-  if (!link || link.estado !== 'aceptado') {
-    res.json({ connected: false }); return
-  }
-
-  const myId = userId
-  const partnerId = asInviter ? (link.partnerUserId ?? null) : link.userId
-
-  if (!partnerId) { res.json({ connected: false }); return }
-
-  // Week bounds
-  const now = new Date()
-  const weekStart = new Date(now)
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
-  weekStart.setHours(0, 0, 0, 0)
-  const weekEnd = new Date(weekStart)
-  weekEnd.setDate(weekStart.getDate() + 6)
-  weekEnd.setHours(23, 59, 59, 999)
-
-  const [myUser, partnerUser, myTx, partnerTx, myMeta, partnerMeta] = await Promise.all([
-    prisma.user.findUnique({ where: { id: myId }, select: { nombre: true, fotoUrl: true } }),
-    prisma.user.findUnique({ where: { id: partnerId }, select: { nombre: true, fotoUrl: true } }),
-    prisma.transaccion.findMany({ where: { userId: myId, fecha: { gte: weekStart, lte: weekEnd } } }),
-    prisma.transaccion.findMany({ where: { userId: partnerId, fecha: { gte: weekStart, lte: weekEnd } } }),
-    prisma.meta.findFirst({ where: { userId: myId, activa: true, tipoMeta: 'SEMANAL', fechaInicio: { lte: now }, fechaFin: { gte: now } } }),
-    prisma.meta.findFirst({ where: { userId: partnerId, activa: true, tipoMeta: 'SEMANAL', fechaInicio: { lte: now }, fechaFin: { gte: now } } }),
+  // Find all accepted PACTO links involving this user
+  const [asInviter, asInvited] = await Promise.all([
+    prisma.pactoPartner.findMany({ where: { userId, estado: 'aceptado', activo: true } }),
+    prisma.pactoPartner.findMany({ where: { partnerUserId: userId, estado: 'aceptado', activo: true } }),
   ])
 
-  const buildStats = (tx: { monto: number; categoria: string }[], meta: { montoObjetivo: number } | null) => {
-    const spent = tx.reduce((s, t) => s + t.monto, 0)
-    const budget = meta?.montoObjetivo ?? 0
-    const pct = budget > 0 ? Math.round((spent / budget) * 100) : null
-    const byCategory: Record<string, number> = {}
-    for (const t of tx) byCategory[t.categoria] = (byCategory[t.categoria] ?? 0) + t.monto
-    return { spent, budget, pct, byCategory, txCount: tx.length }
+  if (asInviter.length === 0 && asInvited.length === 0) {
+    res.json({ connected: false, competitions: [] }); return
   }
 
-  res.json({
-    connected: true,
-    me: { ...myUser, ...buildStats(myTx, myMeta) },
-    partner: { ...partnerUser, ...buildStats(partnerTx, partnerMeta) },
-    weekStart: weekStart.toISOString(),
+  // Collect all partner user IDs
+  const partnerIds = [
+    ...asInviter.map((p) => p.partnerUserId!),
+    ...asInvited.map((p) => p.userId),
+  ].filter(Boolean)
+
+  // Get my stats once
+  const myStats = await weeklyStats(userId)
+
+  // Get each partner's stats
+  const competitionsRaw = await Promise.all(
+    partnerIds.map(async (partnerId) => {
+      const partnerStats = await weeklyStats(partnerId)
+      return { partnerId, partnerStats }
+    })
+  )
+
+  const competitions = competitionsRaw.map(({ partnerId, partnerStats }) => {
+    // Find the link to get the display name (might differ from registered name)
+    const link = asInviter.find((p) => p.partnerUserId === partnerId)
+          ?? asInvited.find((p) => p.userId === partnerId)
+    return {
+      partnerId,
+      linkId: link?.id,
+      partnerNombreInvite: link ? (asInviter.includes(link) ? link.nombre : partnerStats.nombre) : partnerStats.nombre,
+      partner: partnerStats,
+    }
   })
+
+  res.json({ connected: true, me: myStats, competitions })
 }
 
-/** GET /api/pacto/alertas — list recent alertas for current user */
+/** GET /api/pacto/alertas */
 export async function getAlertasForUser(req: AuthRequest, res: Response): Promise<void> {
-  const partner = await prisma.pactoPartner.findUnique({ where: { userId: req.userId! } })
-  if (!partner) { res.json({ alertas: [] }); return }
+  const partners = await prisma.pactoPartner.findMany({ where: { userId: req.userId! } })
+  if (!partners.length) { res.json({ alertas: [] }); return }
   const alertas = await prisma.pactoAlerta.findMany({
-    where: { partnerId: partner.id },
+    where: { partnerId: { in: partners.map((p) => p.id) } },
     orderBy: { createdAt: 'desc' },
-    take: 20,
+    take: 30,
   })
   res.json({ alertas })
 }
 
-/** GET /api/pacto/alerta/:alertaId/status — poll alerta state */
+/** GET /api/pacto/alerta/:alertaId/status */
 export async function getAlertaStatus(req: AuthRequest, res: Response): Promise<void> {
   const { alertaId } = req.params
   const alerta = await prisma.pactoAlerta.findFirst({
@@ -161,52 +193,44 @@ export async function getAlertaStatus(req: AuthRequest, res: Response): Promise<
   res.json({ alerta })
 }
 
-// ─── Public partner-token routes (invite page) ────────────────────────────────
+// ─── Public invite page ───────────────────────────────────────────────────────
 
-/** GET /api/pacto/invite/:token — get invite info (no auth) */
+/** GET /api/pacto/invite/:token */
 export async function getInviteInfo(req: Request, res: Response): Promise<void> {
   const { token } = req.params
   const partner = await prisma.pactoPartner.findUnique({
     where: { token },
     include: { user: { select: { nombre: true, fotoUrl: true } } },
   })
-  if (!partner || !partner.activo) {
-    res.status(404).json({ error: 'Invitación no válida o expirada' }); return
-  }
-  if (partner.estado === 'aceptado') {
-    res.json({ alreadyAccepted: true, inviterNombre: partner.user.nombre }); return
-  }
+  if (!partner || !partner.activo) { res.status(404).json({ error: 'Invitación no válida o expirada' }); return }
+  if (partner.estado === 'aceptado') { res.json({ alreadyAccepted: true, inviterNombre: partner.user.nombre }); return }
   res.json({
     alreadyAccepted: false,
     inviterNombre: partner.user.nombre,
     inviterFotoUrl: partner.user.fotoUrl,
-    partnerNombre: partner.nombre, // pre-fill name
+    partnerNombre: partner.nombre,
   })
 }
 
-// ─── Legacy public partner page routes (for alerta responses) ─────────────────
+// ─── Legacy public partner-alerta page ───────────────────────────────────────
 
-/** GET /api/pacto/p/:token */
 export async function getPartnerPage(req: Request, res: Response): Promise<void> {
   const { token } = req.params
   const partner = await prisma.pactoPartner.findUnique({
     where: { token },
     include: { user: { select: { nombre: true, fotoUrl: true } } },
   })
-  if (!partner || !partner.activo) {
-    res.status(404).json({ error: 'Link de PACTO inválido o desactivado' }); return
-  }
+  if (!partner || !partner.activo) { res.status(404).json({ error: 'Link inválido' }); return }
   res.json({ partner: { nombre: partner.nombre, userNombre: partner.user.nombre, userFotoUrl: partner.user.fotoUrl } })
 }
 
-/** GET /api/pacto/p/:token/alertas */
 export async function getPartnerAlertas(req: Request, res: Response): Promise<void> {
   const { token } = req.params
   const partner = await prisma.pactoPartner.findUnique({
     where: { token },
     include: { user: { select: { nombre: true } } },
   })
-  if (!partner || !partner.activo) { res.status(404).json({ error: 'Link de PACTO inválido' }); return }
+  if (!partner || !partner.activo) { res.status(404).json({ error: 'Link inválido' }); return }
   const alertas = await prisma.pactoAlerta.findMany({
     where: { partnerId: partner.id, expiresAt: { gte: new Date() } },
     orderBy: { createdAt: 'desc' },
@@ -215,31 +239,24 @@ export async function getPartnerAlertas(req: Request, res: Response): Promise<vo
   res.json({ alertas, userNombre: partner.user.nombre })
 }
 
-/** POST /api/pacto/p/:token/alerta/:alertaId/responder */
 export async function responderAlerta(req: Request, res: Response): Promise<void> {
   const { token, alertaId } = req.params
   const { decision, mensaje } = req.body
   if (!['aprobado', 'rechazado'].includes(decision)) { res.status(400).json({ error: 'Decisión inválida' }); return }
-
   const partner = await prisma.pactoPartner.findUnique({ where: { token } })
-  if (!partner || !partner.activo) { res.status(404).json({ error: 'Link de PACTO inválido' }); return }
-
+  if (!partner || !partner.activo) { res.status(404).json({ error: 'Link inválido' }); return }
   const alerta = await prisma.pactoAlerta.findFirst({ where: { id: alertaId, partnerId: partner.id } })
   if (!alerta) { res.status(404).json({ error: 'Alerta no encontrada' }); return }
   if (alerta.estado !== 'pendiente') { res.json({ ok: true, alerta }); return }
-
   const updated = await prisma.pactoAlerta.update({
     where: { id: alertaId },
     data: { estado: decision, respuestaMensaje: mensaje?.trim() || null, respondedAt: new Date() },
   })
-
   const emoji = decision === 'aprobado' ? '✅' : '🛑'
-  const label = decision === 'aprobado' ? 'aprobó' : 'frenó'
   sendPushToUser(alerta.userId, {
-    title: `${emoji} Tu partner ${label} tu gasto`,
+    title: `${emoji} Tu partner ${decision === 'aprobado' ? 'aprobó' : 'frenó'} tu gasto`,
     body: mensaje?.trim() || `Respondió sobre el gasto en ${alerta.categoria}`,
     url: '/pacto',
   }).catch(console.error)
-
   res.json({ ok: true, alerta: updated })
 }

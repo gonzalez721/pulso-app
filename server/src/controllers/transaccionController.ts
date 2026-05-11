@@ -4,6 +4,8 @@ import { prisma } from '../lib/prisma'
 import { sendPushToUser } from '../services/pushService'
 import { evaluarRiesgo, generarMensajeIA } from '../services/riesgoService'
 
+const formatCurrency = (n: number) => '$' + Math.round(n).toLocaleString('es-CO')
+
 export async function createTransaccion(req: AuthRequest, res: Response): Promise<void> {
   const { monto, categoria, descripcion, fecha, metodoPago, comprobante } = req.body
 
@@ -76,14 +78,15 @@ export async function createTransaccion(req: AuthRequest, res: Response): Promis
     if (resultado.nivel !== 'bajo') {
       riesgo = { nivel: resultado.nivel, razonesRiesgo: resultado.razonesRiesgo }
 
-      // Only create alerta + notify partner on 'alto' risk
+      // Only create alerta + notify ALL accepted partners on 'alto' risk
       if (resultado.nivel === 'alto') {
-        const partner = await prisma.pactoPartner.findUnique({
-          where: { userId: req.userId! },
+        const partners = await prisma.pactoPartner.findMany({
+          where: { userId: req.userId!, activo: true, estado: 'aceptado' },
           include: { user: { select: { nombre: true } } },
         })
 
-        if (partner?.activo) {
+        const partner = partners[0] // use first for alertaId return; all get notified below
+        if (partner) {
           // Get weekly spent for AI context
           const weekStart = new Date()
           weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
@@ -131,18 +134,16 @@ export async function createTransaccion(req: AuthRequest, res: Response): Promis
 
           riesgo.alertaId = alerta.id
 
-          // Push to partner's subscriptions
-          const partnerSubs = await prisma.pushSubscription.findMany({
-            where: { userId: partner.userId },
-          })
-          // We notify partner by sending to their userId's subs — but partner is identified by token
-          // The partner may not have a PULSO account. Use partner push subscriptions if stored.
-          // For now: notify user's push channel with a deep link that includes the partner token
-          sendPushToUser(req.userId!, {
-            title: '⚠️ Gasto de riesgo detectado',
-            body: `Tu partner PACTO ${partner.nombre} fue notificado sobre tu gasto en ${categoria}`,
-            url: '/dashboard',
-          }).catch(console.error)
+          // Notify all accepted partners that have a PULSO account
+          for (const p of partners) {
+            if (p.partnerUserId) {
+              sendPushToUser(p.partnerUserId, {
+                title: '🤝 PACTO — gasto de riesgo',
+                body: `${partner.user.nombre} está por gastar ${formatCurrency(Number(monto))} en ${categoria}. ¿Qué le dices?`,
+                url: `/pacto`,
+              }).catch(console.error)
+            }
+          }
         }
       }
     }

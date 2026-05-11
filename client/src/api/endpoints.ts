@@ -110,17 +110,24 @@ export const moodApi = {
 }
 
 // PACTO
+export type PactoPartnerItem = { id: string; nombre: string; telefono?: string; token: string; estado: string; partnerUserId?: string; createdAt: string }
+export type PactoStats = { nombre: string; fotoUrl?: string | null; spent: number; budget: number; pct: number | null; byCategory: Record<string, number>; txCount: number }
+
 export const pactoApi = {
-  getPartner: () =>
+  getPartners: () =>
     api.get<{
-      partner: { id: string; nombre: string; telefono?: string; token: string; activo: boolean; estado: string; partnerUserId?: string; createdAt: string } | null
-      asInvited: { inviterNombre: string; inviterFotoUrl?: string; estado: string } | null
-    }>('/pacto/partner'),
+      partners: PactoPartnerItem[]
+      asInvited: { id: string; inviterNombre: string; inviterFotoUrl?: string; estado: string }[]
+    }>('/pacto/partners'),
 
-  upsertPartner: (data: { nombre: string; telefono?: string }) =>
-    api.post<{ partner: { id: string; nombre: string; telefono?: string; token: string; activo: boolean; estado: string } }>('/pacto/partner', data),
+  createPartner: (data: { nombre: string; telefono?: string }) =>
+    api.post<{ partner: PactoPartnerItem }>('/pacto/partner', data),
 
-  deletePartner: () => api.delete('/pacto/partner'),
+  updatePartner: (partnerId: string, data: { nombre?: string; telefono?: string }) =>
+    api.patch<{ partner: PactoPartnerItem }>(`/pacto/partner/${partnerId}`, data),
+
+  deletePartner: (partnerId: string) =>
+    api.delete(`/pacto/partner/${partnerId}`),
 
   acceptPacto: (token: string) =>
     api.post<{ ok: boolean; estado: string }>('/pacto/accept', { token }),
@@ -128,19 +135,16 @@ export const pactoApi = {
   getDashboard: () =>
     api.get<{
       connected: boolean
-      me?: { nombre: string; fotoUrl?: string; spent: number; budget: number; pct: number | null; byCategory: Record<string, number>; txCount: number }
-      partner?: { nombre: string; fotoUrl?: string; spent: number; budget: number; pct: number | null; byCategory: Record<string, number>; txCount: number }
-      weekStart?: string
+      me?: PactoStats
+      competitions?: { partnerId: string; linkId?: string; partnerNombreInvite: string; partner: PactoStats }[]
     }>('/pacto/dashboard'),
 
   getAlertaStatus: (alertaId: string) =>
     api.get<{ alerta: { id: string; estado: string; respuestaMensaje: string | null; respondedAt: string | null } }>(`/pacto/alerta/${alertaId}/status`),
 
-  // Public — invite info (no auth needed)
   getInviteInfo: (token: string) =>
     api.get<{ alreadyAccepted: boolean; inviterNombre: string; inviterFotoUrl?: string; partnerNombre?: string }>(`/pacto/invite/${token}`),
 
-  // Legacy public partner page
   getPartnerPage: (token: string) =>
     api.get<{ partner: { nombre: string; userNombre: string; userFotoUrl?: string } }>(`/pacto/p/${token}`),
 

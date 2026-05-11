@@ -30,7 +30,7 @@ model User {
   sesiones          Sesion[]
   moodCheckins      MoodCheckin[]
   pushSubscriptions PushSubscription[]
-  pactoPartner      PactoPartner?
+  pactoPartners     PactoPartner[]
 }
 
 model PerfilFinanciero {
@@ -163,19 +163,21 @@ model VerificationToken {
 
 model PactoPartner {
   id              String   @id @default(cuid())
-  userId          String   @unique
+  userId          String                         // inviter (no longer unique — can have many)
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   nombre          String
   telefono        String?
   token           String   @unique @default(cuid())
   activo          Boolean  @default(true)
   estado          String   @default("pendiente") // "pendiente" | "aceptado"
-  partnerUserId   String?  @unique               // set when invited friend registers
+  partnerUserId   String?                        // set when invited friend registers
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   alertas         PactoAlerta[]
 
+  @@unique([userId, partnerUserId])              // each pair is unique once accepted
+  @@index([userId])
   @@index([token])
   @@index([partnerUserId])
 }
