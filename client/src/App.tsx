@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useAuthStore } from './store/authStore'
 import { useAsesorStore } from './store/asesorStore'
-import { userApi } from './api/endpoints'
+import { userApi, pactoApi } from './api/endpoints'
 import { AppLayout } from './components/layout/AppLayout'
 import { AsesorLayout } from './components/asesor/AsesorLayout'
 import { LoginPage } from './pages/LoginPage'
@@ -27,6 +27,7 @@ import { AsesorPerfilPage } from './pages/asesor/AsesorPerfilPage'
 import { VerifyCodePage, AsesorVerifyCodePage } from './pages/VerifyCodePage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { PactoPartnerPage } from './pages/PactoPartnerPage'
+import { PactoPage } from './pages/pacto/PactoPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +44,12 @@ function SessionGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isAuthenticated) {
       userApi.getProfile().catch(() => logout())
+      // Auto-accept any pending PACTO invite after login
+      const pendingToken = localStorage.getItem('pendingPactoToken')
+      if (pendingToken) {
+        localStorage.removeItem('pendingPactoToken')
+        pactoApi.acceptPacto(pendingToken).catch(() => {})
+      }
     }
   }, [])
   return <>{children}</>
@@ -108,6 +115,7 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/weekly" element={<WeeklyWrapPage />} />
             <Route path="/sessions" element={<SessionsPage />} />
+            <Route path="/pacto" element={<PactoPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/mood" element={<MoodCheckinPage />} />
           </Route>

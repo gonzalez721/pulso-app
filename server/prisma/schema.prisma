@@ -162,19 +162,22 @@ model VerificationToken {
 }
 
 model PactoPartner {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  nombre    String
-  telefono  String?
-  token     String   @unique @default(cuid())
-  activo    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nombre          String
+  telefono        String?
+  token           String   @unique @default(cuid())
+  activo          Boolean  @default(true)
+  estado          String   @default("pendiente") // "pendiente" | "aceptado"
+  partnerUserId   String?  @unique               // set when invited friend registers
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  alertas   PactoAlerta[]
+  alertas         PactoAlerta[]
 
   @@index([token])
+  @@index([partnerUserId])
 }
 
 model PactoAlerta {

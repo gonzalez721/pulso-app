@@ -50,7 +50,8 @@ export function AddTransactionModal({ open, onClose }: Props) {
   const { mutate, isPending } = useCreateTransaccion()
   const user = useAuthStore((s) => s.user)
   const navigate = useNavigate()
-  const { data: partner } = usePactoPartner()
+  const { data: pactoData } = usePactoPartner()
+  const partner = pactoData?.partner
 
   const horas = calcHoras(monto, user?.ingresoMensual ?? 0, user?.horasTrabajoSemanal ?? 0)
 
