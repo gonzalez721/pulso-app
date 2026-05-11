@@ -33,6 +33,19 @@ export function BookSessionModal({ open, onClose }: Props) {
   const today = new Date()
   const [calMonth, setCalMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
 
+  // Filter past slots when the selected date is today (with 30-min buffer)
+  const filterSlots = (horas: string[], date: Date): string[] => {
+    const isToday = date.toDateString() === today.toDateString()
+    if (!isToday) return horas
+    const cutoff = new Date(today.getTime() + 30 * 60 * 1000) // now + 30 min
+    return horas.filter((hora) => {
+      const [h, m] = hora.split(':').map(Number)
+      const slot = new Date(date)
+      slot.setHours(h, m, 0, 0)
+      return slot > cutoff
+    })
+  }
+
   const copyLink = () => {
     navigator.clipboard.writeText(meetLink)
     setCopied(true)
@@ -148,8 +161,9 @@ export function BookSessionModal({ open, onClose }: Props) {
                 {[0, 1, 2].map((i) => <div key={i} className="h-20 bg-surface-elevated rounded-2xl animate-pulse border border-border-light" />)}
               </div>
             ) : (
-              (asesores ?? []).map((asesor) =>
-                (asesor.horasDisponibles ?? []).length > 0 ? (
+              (asesores ?? []).map((asesor) => {
+                const slots = filterSlots(asesor.horasDisponibles ?? [], selectedDate)
+                return slots.length > 0 ? (
                   <div key={asesor.id} className="bg-surface-raised border border-border-light rounded-3xl p-4">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-xl bg-surface-elevated border border-border-light flex items-center justify-center overflow-hidden">
@@ -165,7 +179,7 @@ export function BookSessionModal({ open, onClose }: Props) {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {asesor.horasDisponibles?.map((hora) => (
+                      {slots.map((hora) => (
                         <button
                           key={hora}
                           onClick={() => { setSelectedAsesor(asesor); setSelectedHora(hora); setStep('topics') }}
@@ -177,10 +191,10 @@ export function BookSessionModal({ open, onClose }: Props) {
                     </div>
                   </div>
                 ) : null
-              )
+              })
             )}
 
-            {!isLoading && asesores?.every((a) => !a.horasDisponibles?.length) && (
+            {!isLoading && asesores?.every((a) => filterSlots(a.horasDisponibles ?? [], selectedDate).length === 0) && (
               <div className="text-center py-8 text-text-muted">
                 <p className="text-3xl mb-2">📅</p>
                 <p className="font-semibold">Sin horarios disponibles este día</p>
