@@ -1,11 +1,18 @@
 import webpush from 'web-push'
 import { prisma } from '../lib/prisma'
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL ?? 'mailto:admin@pulsopacto.online',
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
+const vapidReady = !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY)
+
+if (vapidReady) {
+  webpush.setVapidDetails(
+    process.env.VAPID_EMAIL ?? 'mailto:admin@pulsopacto.online',
+    process.env.VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  )
+  console.log('[push] VAPID configured ✅')
+} else {
+  console.warn('[push] VAPID keys not set — push notifications disabled')
+}
 
 interface PushPayload {
   title: string
@@ -21,6 +28,7 @@ async function sendToSubs(
   subs: { id: string; endpoint: string; p256dh: string; auth: string }[],
   payload: PushPayload
 ) {
+  if (!vapidReady) return
   await Promise.allSettled(
     subs.map(async (sub) => {
       try {
