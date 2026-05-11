@@ -62,7 +62,10 @@ api.interceptors.response.use(
       return api(original)
     } catch {
       useAuthStore.getState().logout()
-      window.location.href = '/'
+      // Don't redirect if already on an auth page — just clear the session
+      const authPaths = ['/login', '/register', '/verify-code', '/forgot-password', '/asesor/login', '/asesor/register']
+      const onAuthPage = authPaths.some((p) => window.location.pathname.startsWith(p))
+      if (!onAuthPage) window.location.href = '/'
       return Promise.reject(error)
     } finally {
       isRefreshing = false

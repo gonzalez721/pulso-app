@@ -41,7 +41,9 @@ asesorApi.interceptors.response.use(
       return asesorApi(original)
     } catch {
       useAsesorStore.getState().logout()
-      window.location.href = '/asesor/login'
+      const authPaths = ['/login', '/register', '/verify-code', '/forgot-password', '/asesor/login', '/asesor/register']
+      const onAuthPage = authPaths.some((p) => window.location.pathname.startsWith(p))
+      if (!onAuthPage) window.location.href = '/asesor/login'
       return Promise.reject(error)
     } finally { refreshing = false }
   }
