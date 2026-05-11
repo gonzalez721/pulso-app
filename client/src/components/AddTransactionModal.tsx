@@ -247,11 +247,9 @@ export function AddTransactionModal({ open, onClose }: Props) {
         partnerNombre={partner?.nombre ?? null}
         onContinue={handleClose}
         onCancel={() => {
-          // Delete the transaction that was just saved
-          if (lastTransaccionId) {
-            deleteTransaccion(lastTransaccionId)
-          }
+          if (lastTransaccionId) deleteTransaccion(lastTransaccionId)
           handleClose()
+          navigate('/dashboard')
         }}
       />
     </>
