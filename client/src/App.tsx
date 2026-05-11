@@ -40,10 +40,12 @@ const queryClient = new QueryClient({
 })
 
 function SessionGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, logout } = useAuthStore()
+  const { isAuthenticated, logout, setUser } = useAuthStore()
   useEffect(() => {
     if (isAuthenticated) {
-      userApi.getProfile().catch(() => logout())
+      // Always refresh profile from server so fields like ingresoMensual/horasTrabajoSemanal
+      // are up-to-date even on a new device or incognito session
+      userApi.getProfile().then((r) => setUser(r.data)).catch(() => logout())
       // Auto-accept any pending PACTO invite after login
       const pendingToken = localStorage.getItem('pendingPactoToken')
       if (pendingToken) {
