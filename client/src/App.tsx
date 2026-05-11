@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { useAuthStore } from './store/authStore'
 import { useAsesorStore } from './store/asesorStore'
+import { userApi } from './api/endpoints'
 import { AppLayout } from './components/layout/AppLayout'
 import { AsesorLayout } from './components/asesor/AsesorLayout'
 import { LoginPage } from './pages/LoginPage'
@@ -34,9 +36,19 @@ const queryClient = new QueryClient({
   },
 })
 
+function SessionGuard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, logout } = useAuthStore()
+  useEffect(() => {
+    if (isAuthenticated) {
+      userApi.getProfile().catch(() => logout())
+    }
+  }, [])
+  return <>{children}</>
+}
+
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
+  return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />
 }
 
 function RequireAsesorAuth({ children }: { children: React.ReactNode }) {
@@ -63,6 +75,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <SessionGuard>
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
@@ -123,6 +136,7 @@ export default function App() {
           <Route path="/" element={<SmartHome />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </SessionGuard>
       </BrowserRouter>
     </QueryClientProvider>
   )
