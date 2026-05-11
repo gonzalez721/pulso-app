@@ -23,11 +23,12 @@ model User {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  perfil        PerfilFinanciero?
-  transacciones Transaccion[]
-  metas         Meta[]
-  sesiones      Sesion[]
-  moodCheckins  MoodCheckin[]
+  perfil            PerfilFinanciero?
+  transacciones     Transaccion[]
+  metas             Meta[]
+  sesiones          Sesion[]
+  moodCheckins      MoodCheckin[]
+  pushSubscriptions PushSubscription[]
 }
 
 model PerfilFinanciero {
@@ -87,9 +88,10 @@ model Asesor {
   googleCalendarId String?
   activo           Boolean  @default(true)
   emailVerified    Boolean  @default(false)
-  sesiones         Sesion[]
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  sesiones          Sesion[]
+  pushSubscriptions PushSubscription[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model Sesion {
@@ -155,4 +157,20 @@ model VerificationToken {
 
   @@unique([userId, type])
   @@index([userId])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userId    String?
+  asesorId  String?
+  createdAt DateTime @default(now())
+
+  user   User?   @relation(fields: [userId],   references: [id], onDelete: Cascade)
+  asesor Asesor? @relation(fields: [asesorId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([asesorId])
 }

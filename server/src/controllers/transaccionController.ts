@@ -1,6 +1,7 @@
 import { Response } from 'express'
 import { AuthRequest } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
+import { sendPushToUser } from '../services/pushService'
 
 export async function createTransaccion(req: AuthRequest, res: Response): Promise<void> {
   const { monto, categoria, descripcion, fecha, metodoPago, comprobante } = req.body
@@ -34,10 +35,36 @@ export async function createTransaccion(req: AuthRequest, res: Response): Promis
   })
 
   if (activeMeta) {
+    const prevGastado = activeMeta.montoGastado
+    const newGastado  = prevGastado + Number(monto)
+
     await prisma.meta.update({
       where: { id: activeMeta.id },
       data: { montoGastado: { increment: Number(monto) } },
     })
+
+    // Alert at 75% threshold (fire only once when crossing it)
+    const threshold = 0.75
+    const prevPct = prevGastado / activeMeta.montoObjetivo
+    const newPct  = newGastado  / activeMeta.montoObjetivo
+
+    if (prevPct < threshold && newPct >= threshold && newPct < 1) {
+      const remaining = Math.round(activeMeta.montoObjetivo - newGastado)
+      sendPushToUser(req.userId!, {
+        title: '⚠️ Vas por el 75% de tu presupuesto',
+        body: `Te quedan $${remaining.toLocaleString('es-CO')} para el resto de la semana. Lleva el ritmo.`,
+        url: '/dashboard',
+      }).catch(console.error)
+    }
+
+    // Alert when budget exceeded
+    if (prevPct < 1 && newPct >= 1) {
+      sendPushToUser(req.userId!, {
+        title: '🚨 Superaste tu presupuesto semanal',
+        body: 'Revisemos juntos qué pasó esta semana. Abre tu resumen.',
+        url: '/weekly',
+      }).catch(console.error)
+    }
   }
 
   res.status(201).json({ transaccion })

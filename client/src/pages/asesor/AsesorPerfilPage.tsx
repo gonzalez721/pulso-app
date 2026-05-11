@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronRight, Clock, Edit2, LogOut, RefreshCw } from 'lucide-react'
+import { ChevronRight, Clock, Edit2, LogOut, RefreshCw, Bell, BellOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAsesorStore } from '../../store/asesorStore'
 import { useAsesorLogout } from '../../hooks/useAsesor'
 import { useTourStore } from '../../store/tourStore'
 import { asesorEndpoints } from '../../api/asesorClient'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { getInitials } from '../../lib/utils'
 import { Modal } from '../../components/ui/Modal'
 import { Button } from '../../components/ui/Button'
@@ -85,6 +86,7 @@ export function AsesorPerfilPage() {
   const logout = useAsesorLogout()
   const { resetAsesorTour } = useTourStore()
   const [showEdit, setShowEdit] = useState(false)
+  const push = usePushNotifications({ role: 'asesor' })
 
   if (!asesor) return null
   const initials = getInitials(asesor.nombre)
@@ -138,6 +140,48 @@ export function AsesorPerfilPage() {
           </div>
         )}
       </motion.div>
+
+      {/* Push notifications toggle */}
+      {push.supported && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="rounded-3xl p-5"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-surface-elevated border border-border-light flex items-center justify-center">
+                {push.subscribed ? <Bell size={18} className="text-neon-green" /> : <BellOff size={18} className="text-text-muted" />}
+              </div>
+              <div>
+                <p className="font-bold text-white text-sm">Notificaciones push</p>
+                <p className="text-text-muted text-xs">
+                  {push.permission === 'denied'
+                    ? 'Bloqueadas — actívalas en ajustes del navegador'
+                    : push.subscribed
+                    ? 'Activadas — recordatorios de sesiones'
+                    : 'Desactivadas'}
+                </p>
+              </div>
+            </div>
+            {push.permission !== 'denied' && (
+              <button
+                onClick={push.subscribed ? push.unsubscribe : push.subscribe}
+                disabled={push.loading}
+                className="relative w-12 h-6 rounded-full transition-colors duration-200 flex-shrink-0"
+                style={{ background: push.subscribed ? '#A8FF3E' : 'rgba(255,255,255,0.12)' }}
+              >
+                <span
+                  className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200"
+                  style={{ left: push.subscribed ? '26px' : '2px' }}
+                />
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
 
       {/* Quick actions */}
       <motion.div

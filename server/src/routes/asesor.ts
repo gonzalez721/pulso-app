@@ -8,6 +8,7 @@ import {
   updateDisponibilidad, updateSesionStatus,
 } from '../controllers/asesorController'
 import { requireAsesorAuth } from '../middleware/asesorAuth'
+import { subscribeAsesor, unsubscribeUser } from '../controllers/pushController'
 
 const router = Router()
 
@@ -29,5 +30,7 @@ router.get('/estudiante/:userId/stats',              requireAsesorAuth, getEstud
 router.get('/estudiante/:userId/historia',          requireAsesorAuth, getEstudianteHistoria)
 router.post('/sesiones/:sesionId/observacion',       requireAsesorAuth, saveObservacion)
 router.patch('/sesiones/:sesionId/status',           requireAsesorAuth, updateSesionStatus)
+router.post('/push/subscribe',   requireAsesorAuth, subscribeAsesor as any)
+router.delete('/push/subscribe', requireAsesorAuth, unsubscribeUser as any)
 
 export default router

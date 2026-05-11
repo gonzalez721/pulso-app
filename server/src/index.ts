@@ -13,7 +13,9 @@ import sesionRoutes from './routes/sesiones'
 import insightRoutes from './routes/insights'
 import moodRoutes from './routes/mood'
 import asesorRoutes from './routes/asesor'
+import pushRoutes from './routes/push'
 import { errorHandler, notFound } from './middleware/errorHandler'
+import { startCronJobs } from './cron'
 import { sendVerificationEmail } from './lib/resend'
 
 const app = express()
@@ -89,6 +91,7 @@ app.use('/api/sesiones', sesionRoutes)
 app.use('/api/insights', insightRoutes)
 app.use('/api/mood', moodRoutes)
 app.use('/api/asesor', asesorRoutes)
+app.use('/api/push',  pushRoutes)
 
 // Error handling
 app.use(notFound)
@@ -96,6 +99,7 @@ app.use(errorHandler)
 
 app.listen(PORT, () => {
   console.log(`🚀 PULSO API running on http://localhost:${PORT}`)
+  startCronJobs()
 
   // ── Keep-alive: prevent Render free tier from sleeping ──────────────────
   // Render sleeps services after 15 min of inactivity — self-ping every 14 min
