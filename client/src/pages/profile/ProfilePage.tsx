@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { LogOut, ChevronRight, Target, Bell, HelpCircle } from 'lucide-react'
+import { LogOut, ChevronRight, Target, Bell, HelpCircle, Briefcase, RefreshCw, Edit2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useLogout, useProfile } from '../../hooks/useAuth'
 import { useActiveMetas, useCreateMeta } from '../../hooks/useTransacciones'
+import { useTourStore } from '../../store/tourStore'
+import { userApi } from '../../api/endpoints'
 
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -12,15 +14,46 @@ import { AmountInput } from '../../components/ui/AmountInput'
 import { Modal } from '../../components/ui/Modal'
 import { formatCurrency, getWeekStart, getWeekEnd } from '../../lib/utils'
 
+const HORAS_PRESETS = [10, 20, 30, 40, 48]
+
 export function ProfilePage() {
   const navigate = useNavigate()
-  const { user } = useAuthStore()
+  const { user, setUser } = useAuthStore()
   const { data: profile } = useProfile()
   const { data: metas } = useActiveMetas()
   const { mutate: logout, isPending: loggingOut } = useLogout()
   const { mutate: createMeta, isPending: creatingMeta } = useCreateMeta()
+  const { resetStudentTour } = useTourStore()
+
   const [showBudgetModal, setShowBudgetModal] = useState(false)
   const [newBudget, setNewBudget] = useState(0)
+  const [showWorkModal, setShowWorkModal] = useState(false)
+  const [workIngreso, setWorkIngreso] = useState(0)
+  const [workHoras, setWorkHoras] = useState(0)
+  const [workHorasInput, setWorkHorasInput] = useState('')
+  const [savingWork, setSavingWork] = useState(false)
+
+  const openWorkModal = () => {
+    setWorkIngreso(user?.ingresoMensual ?? 0)
+    const h = user?.horasTrabajoSemanal ?? 0
+    setWorkHoras(h)
+    setWorkHorasInput(h > 0 ? String(h) : '')
+    setShowWorkModal(true)
+  }
+
+  const saveWork = async () => {
+    setSavingWork(true)
+    try {
+      const { data } = await userApi.updateProfile({
+        ingresoMensual: workIngreso > 0 ? workIngreso : undefined,
+        horasTrabajoSemanal: workHoras > 0 ? workHoras : undefined,
+      })
+      setUser(data)
+      setShowWorkModal(false)
+    } finally {
+      setSavingWork(false)
+    }
+  }
 
   const weeklyMeta = metas?.find((m) => m.tipoMeta === 'SEMANAL')
   const initials = user?.nombre.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()
@@ -126,14 +159,53 @@ export function ProfilePage() {
         )}
       </Card>
 
+      {/* Work data */}
+      <Card animate>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-surface-elevated border border-border-light flex items-center justify-center">
+              <Briefcase size={18} className="text-neon-green" />
+            </div>
+            <div>
+              <p className="font-bold text-white text-sm">Datos laborales</p>
+              <p className="text-text-muted text-xs">
+                {user?.ingresoMensual
+                  ? `${formatCurrency(user.ingresoMensual)}/mes · ${user.horasTrabajoSemanal ?? '?'}h/sem`
+                  : 'Sin configurar — necesario para la Pausa PULSO'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={openWorkModal}
+            className="text-xs font-bold text-neon-green bg-neon-green/10 border border-neon-green/20 px-3 py-1.5 rounded-xl hover:bg-neon-green/20 transition-colors flex items-center gap-1"
+          >
+            <Edit2 size={11} />
+            {user?.ingresoMensual ? 'Editar' : 'Agregar'}
+          </button>
+        </div>
+        {user?.ingresoMensual && user?.horasTrabajoSemanal ? (
+          <div className="mt-4 pt-4 border-t border-border-light">
+            <p className="text-xs text-text-dim leading-relaxed">
+              Tu valor hora aproximado:{' '}
+              <span className="text-neon-green font-bold">
+                {formatCurrency(Math.round(user.ingresoMensual / (user.horasTrabajoSemanal * 4.33)))}/hora
+              </span>
+              {' '}— usado en la Pausa PULSO al registrar gastos.
+            </p>
+          </div>
+        ) : null}
+      </Card>
+
       {/* Settings items */}
       <Card animate padding="none">
         {[
-          { icon: Bell, label: 'Notificaciones', sub: 'Recordatorios y alertas' },
-          { icon: HelpCircle, label: 'Ayuda y soporte', sub: 'Preguntas frecuentes' },
-        ].map(({ icon: Icon, label, sub }, i) => (
+          { icon: RefreshCw, label: 'Ver tour de nuevo', sub: 'Repasa todas las funciones', onClick: () => resetStudentTour() },
+          { icon: Bell, label: 'Notificaciones', sub: 'Recordatorios y alertas', onClick: () => {} },
+          { icon: HelpCircle, label: 'Ayuda y soporte', sub: 'Preguntas frecuentes', onClick: () => {} },
+        ].map(({ icon: Icon, label, sub, onClick }, i) => (
           <button
             key={label}
+            onClick={onClick}
             className={`w-full flex items-center gap-4 px-5 py-4 hover:bg-surface-elevated transition-colors ${i > 0 ? 'border-t border-border-light' : ''}`}
           >
             <div className="w-10 h-10 rounded-2xl bg-surface-elevated border border-border-light flex items-center justify-center">
@@ -169,6 +241,68 @@ export function ProfilePage() {
         <div className="px-5 py-4 space-y-4">
           <AmountInput value={newBudget} onChange={setNewBudget} label="Nuevo presupuesto semanal" />
           <Button onClick={handleUpdateBudget} loading={creatingMeta} disabled={newBudget <= 0} fullWidth size="lg">
+            Guardar
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Work data modal */}
+      <Modal open={showWorkModal} onClose={() => setShowWorkModal(false)} title="Datos laborales">
+        <div className="px-5 py-4 space-y-5">
+          <AmountInput value={workIngreso} onChange={setWorkIngreso} label="¿Cuánto ganas al mes?" />
+
+          <div>
+            <label className="text-sm font-semibold text-white mb-3 block">
+              ¿Cuántas horas trabajas por semana?
+            </label>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {HORAS_PRESETS.map((h) => (
+                <button
+                  key={h}
+                  onClick={() => { setWorkHoras(h); setWorkHorasInput(String(h)) }}
+                  className={`px-4 py-2 rounded-2xl text-sm font-bold border-2 transition-all ${
+                    workHoras === h
+                      ? 'bg-neon-green border-neon-green text-[#0A0A12]'
+                      : 'bg-surface-elevated border-border-light text-white hover:border-neon-green/40'
+                  }`}
+                >
+                  {h}h
+                </button>
+              ))}
+            </div>
+            <input
+              type="number"
+              min={1}
+              max={80}
+              value={workHorasInput}
+              onChange={(e) => {
+                setWorkHorasInput(e.target.value)
+                const n = parseInt(e.target.value, 10)
+                if (!isNaN(n) && n > 0) setWorkHoras(n)
+              }}
+              placeholder="O escribe las horas exactas..."
+              className="w-full bg-surface-elevated border border-border-light rounded-2xl px-4 py-3 text-white placeholder-text-dim focus:outline-none focus:border-neon-green/60 text-sm"
+            />
+          </div>
+
+          {workIngreso > 0 && workHoras > 0 && (
+            <div className="rounded-2xl p-4 text-center"
+              style={{ background: 'rgba(168,255,62,0.08)', border: '1px solid rgba(168,255,62,0.25)' }}>
+              <p className="text-sm text-text-muted mb-1">Tu valor hora</p>
+              <p className="text-2xl font-extrabold text-neon-green">
+                {formatCurrency(Math.round(workIngreso / (workHoras * 4.33)))}
+                <span className="text-sm font-normal text-text-muted"> /hora</span>
+              </p>
+            </div>
+          )}
+
+          <Button
+            onClick={saveWork}
+            loading={savingWork}
+            disabled={workIngreso <= 0 || workHoras <= 0}
+            fullWidth
+            size="lg"
+          >
             Guardar
           </Button>
         </div>

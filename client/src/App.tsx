@@ -23,6 +23,7 @@ import { AsesorSesionDetail } from './pages/asesor/AsesorSesionDetail'
 import { AsesorDisponibilidadPage } from './pages/asesor/AsesorDisponibilidadPage'
 import { AsesorCalendarioPage } from './pages/asesor/AsesorCalendarioPage'
 import { AsesorEstudianteHistoria } from './pages/asesor/AsesorEstudianteHistoria'
+import { AsesorPerfilPage } from './pages/asesor/AsesorPerfilPage'
 import { VerifyCodePage, AsesorVerifyCodePage } from './pages/VerifyCodePage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 
@@ -130,6 +131,7 @@ export default function App() {
             <Route path="calendario" element={<AsesorCalendarioPage />} />
             <Route path="estudiante/:userId/historia" element={<AsesorEstudianteHistoria />} />
             <Route path="disponibilidad" element={<AsesorDisponibilidadPage />} />
+            <Route path="perfil" element={<AsesorPerfilPage />} />
           </Route>
 
           {/* Landing — entrada unificada */}

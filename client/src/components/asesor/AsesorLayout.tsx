@@ -1,9 +1,10 @@
 import { Outlet, NavLink, Navigate } from 'react-router-dom'
-import { LayoutDashboard, CalendarDays, Clock, LogOut, Calendar } from 'lucide-react'
+import { LayoutDashboard, CalendarDays, Clock, LogOut, Calendar, User } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAsesorStore } from '../../store/asesorStore'
 import { useAsesorLogout } from '../../hooks/useAsesor'
 import { getInitials } from '../../lib/utils'
+import { AsesorTour } from '../tour/AsesorTour'
 
 export function AsesorLayout() {
   const { asesor } = useAsesorStore()
@@ -51,6 +52,7 @@ export function AsesorLayout() {
               { to: '/asesor/sesiones',         icon: CalendarDays,    label: 'Sesiones' },
               { to: '/asesor/calendario',       icon: Calendar,        label: 'Calendario' },
               { to: '/asesor/disponibilidad',   icon: Clock,           label: 'Horario' },
+              { to: '/asesor/perfil',           icon: User,            label: 'Perfil' },
             ].map(({ to, icon: Icon, label }) => (
               <NavLink key={to} to={to} className="flex-1 flex flex-col items-center gap-1 py-3 transition-colors relative">
                 {({ isActive }) => (
@@ -73,6 +75,7 @@ export function AsesorLayout() {
           </div>
         </div>
       </nav>
+      <AsesorTour />
     </div>
   )
 }

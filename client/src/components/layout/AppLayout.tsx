@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { AddTransactionModal } from '../AddTransactionModal'
+import { StudentTour } from '../tour/StudentTour'
 import { useUIStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
 import { MailWarning, X, ShieldCheck } from 'lucide-react'
@@ -42,6 +43,7 @@ export function AppLayout() {
         open={showAddTransaction}
         onClose={() => setShowAddTransaction(false)}
       />
+      <StudentTour />
     </div>
   )
 }

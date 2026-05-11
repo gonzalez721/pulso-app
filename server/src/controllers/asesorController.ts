@@ -222,6 +222,21 @@ export async function getAsesorProfile(req: AsesorRequest, res: Response): Promi
   res.json(asesor)
 }
 
+export async function updateAsesorProfile(req: AsesorRequest, res: Response): Promise<void> {
+  const { nombre, bio, carrera, semestre } = req.body
+  const updated = await prisma.asesor.update({
+    where: { id: req.asesorId },
+    data: {
+      ...(nombre   ? { nombre }            : {}),
+      ...(bio      !== undefined ? { bio } : {}),
+      ...(carrera  ? { carrera }           : {}),
+      ...(semestre ? { semestre: Number(semestre) } : {}),
+    },
+    select: { id: true, email: true, nombre: true, carrera: true, semestre: true, bio: true, fotoUrl: true, emailVerified: true },
+  })
+  res.json(updated)
+}
+
 export async function getAsesorSesiones(req: AsesorRequest, res: Response): Promise<void> {
   const { estado } = req.query
 
