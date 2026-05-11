@@ -4,6 +4,7 @@ import { WelcomeStep } from './steps/WelcomeStep'
 import { ObjectiveStep } from './steps/ObjectiveStep'
 import { HabitsStep } from './steps/HabitsStep'
 import { BudgetStep } from './steps/BudgetStep'
+import { WorkStep, type WorkStepData } from './steps/WorkStep'
 import { CategoriesStep } from './steps/CategoriesStep'
 import { useUpdateProfile } from '../../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
@@ -12,10 +13,12 @@ export interface OnboardingData {
   objetivo: string
   dificultades: string[]
   presupuestoSemanal: number
+  ingresoMensual: number
+  horasTrabajoSemanal: number
   categorias: string[]
 }
 
-const TOTAL_STEPS = 5
+const TOTAL_STEPS = 6
 
 export function OnboardingPage() {
   const [step, setStep] = useState(0)
@@ -37,6 +40,8 @@ export function OnboardingPage() {
         categoriasGasto: catMap,
         dificultadesReportadas: data.dificultades,
         presupuestoSemanal: data.presupuestoSemanal,
+        ingresoMensual: data.ingresoMensual,
+        horasTrabajoSemanal: data.horasTrabajoSemanal,
         onboardingComplete: true,
       },
       { onSuccess: () => navigate('/dashboard') }
@@ -48,6 +53,7 @@ export function OnboardingPage() {
     <ObjectiveStep onNext={(obj) => { update({ objetivo: obj }); next() }} />,
     <HabitsStep onNext={(difs) => { update({ dificultades: difs }); next() }} />,
     <BudgetStep onNext={(budget) => { update({ presupuestoSemanal: budget }); next() }} />,
+    <WorkStep onNext={(work: WorkStepData) => { update(work); next() }} />,
     <CategoriesStep onNext={(cats) => { update({ categorias: cats }); finish() }} loading={isPending} />,
   ]
 

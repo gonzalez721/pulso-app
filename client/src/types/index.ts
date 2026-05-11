@@ -5,6 +5,8 @@ export interface User {
   universidad?: string
   semestre?: number
   mensualidadMensual?: number
+  ingresoMensual?: number
+  horasTrabajoSemanal?: number
   appsPago: string[]
   onboardingComplete: boolean
   emailVerified?: boolean
