@@ -22,7 +22,9 @@ asesorApi.interceptors.response.use(
   (r) => r,
   async (error: AxiosError) => {
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
-    if (error.response?.status !== 401 || original._retry) return Promise.reject(error)
+    const url = original.url ?? ''
+    const isAuthRoute = url.includes('/login') || url.includes('/register') || url.includes('/refresh')
+    if (error.response?.status !== 401 || original._retry || isAuthRoute) return Promise.reject(error)
 
     if (refreshing) {
       return new Promise((resolve) => { queue.push((t) => { original.headers.Authorization = `Bearer ${t}`; resolve(asesorApi(original)) }) })

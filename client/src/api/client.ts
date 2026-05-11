@@ -27,7 +27,11 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
-    if (error.response?.status !== 401 || original._retry) {
+    // Don't intercept auth endpoints — let the mutation's onError handle it
+    const url = original.url ?? ''
+    const isAuthRoute = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh')
+
+    if (error.response?.status !== 401 || original._retry || isAuthRoute) {
       return Promise.reject(error)
     }
 
