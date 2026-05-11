@@ -59,7 +59,7 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
 
 // Health check
-app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }))
+app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString(), v: '1.1.0' }))
 
 
 // Email diagnostic — call GET /health/email?to=you@example.com to test Resend
