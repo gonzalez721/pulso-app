@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Shield, Share2, Plus, Trash2, Edit2, Trophy, Zap, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react'
 import { usePactoPartners, useCreatePartner, useUpdatePartner, useDeletePartner, usePactoDashboard } from '../../hooks/usePacto'
@@ -30,20 +30,38 @@ function PartnerModal({ open, onClose, existing }: {
 }) {
   const [nombre, setNombre] = useState(existing?.nombre ?? '')
   const [telefono, setTelefono] = useState(existing?.telefono ?? '')
+  const [errorMsg, setErrorMsg] = useState('')
   const { mutate: create, isPending: creating } = useCreatePartner()
   const { mutate: update, isPending: updating } = useUpdatePartner()
 
-  const handleOpen = () => {
-    setNombre(existing?.nombre ?? '')
-    setTelefono(existing?.telefono ?? '')
-  }
+  // Reset form every time the modal opens
+  useEffect(() => {
+    if (open) {
+      setNombre(existing?.nombre ?? '')
+      setTelefono(existing?.telefono ?? '')
+      setErrorMsg('')
+    }
+  }, [open, existing?.id])
 
   const save = () => {
     if (!nombre.trim()) return
+    setErrorMsg('')
     if (existing) {
-      update({ partnerId: existing.id, nombre: nombre.trim(), telefono: telefono.trim() || undefined }, { onSuccess: onClose })
+      update(
+        { partnerId: existing.id, nombre: nombre.trim(), telefono: telefono.trim() || undefined },
+        {
+          onSuccess: onClose,
+          onError: (e: any) => setErrorMsg(e?.response?.data?.error ?? 'Error al guardar. Intenta de nuevo.'),
+        }
+      )
     } else {
-      create({ nombre: nombre.trim(), telefono: telefono.trim() || undefined }, { onSuccess: onClose })
+      create(
+        { nombre: nombre.trim(), telefono: telefono.trim() || undefined },
+        {
+          onSuccess: onClose,
+          onError: (e: any) => setErrorMsg(e?.response?.data?.error ?? 'Error al crear el partner. Intenta de nuevo.'),
+        }
+      )
     }
   }
 
@@ -53,6 +71,7 @@ function PartnerModal({ open, onClose, existing }: {
         <div>
           <label className="text-sm font-semibold text-white mb-2 block">Nombre</label>
           <input autoFocus type="text" value={nombre} onChange={(e) => setNombre(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && save()}
             placeholder="¿Cómo se llama?"
             className="w-full bg-surface-elevated border border-border-light rounded-2xl px-4 py-3 text-white placeholder-text-dim focus:outline-none focus:border-neon-green/60 text-sm" />
         </div>
@@ -62,6 +81,11 @@ function PartnerModal({ open, onClose, existing }: {
             placeholder="+57 300 000 0000"
             className="w-full bg-surface-elevated border border-border-light rounded-2xl px-4 py-3 text-white placeholder-text-dim focus:outline-none focus:border-neon-green/60 text-sm" />
         </div>
+        {errorMsg && (
+          <div className="rounded-xl px-3 py-2 text-xs text-red-300" style={{ background: 'rgba(255,71,87,0.1)', border: '1px solid rgba(255,71,87,0.2)' }}>
+            ⚠️ {errorMsg}
+          </div>
+        )}
         <div className="rounded-2xl p-3 text-xs text-text-muted leading-relaxed"
           style={{ background: 'rgba(124,77,255,0.06)', border: '1px solid rgba(124,77,255,0.15)' }}>
           🔒 Solo verá tus alertas y estadísticas semanales. Nunca el saldo exacto ni contraseña.
