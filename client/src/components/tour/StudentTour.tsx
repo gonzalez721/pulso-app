@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
@@ -155,6 +155,11 @@ export function StudentTour() {
 
   const isLast = step === STEPS.length - 1
   const current = STEPS[step]
+
+  // Reset step to 0 whenever the tour becomes visible again (e.g. after reset)
+  useEffect(() => {
+    if (!studentDone) setStep(0)
+  }, [studentDone])
 
   if (studentDone || !user?.onboardingComplete) return null
 

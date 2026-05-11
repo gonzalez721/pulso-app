@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { AmountInput } from './ui/AmountInput'
@@ -43,6 +44,7 @@ export function AddTransactionModal({ open, onClose }: Props) {
 
   const { mutate, isPending } = useCreateTransaccion()
   const user = useAuthStore((s) => s.user)
+  const navigate = useNavigate()
 
   const horas = calcHoras(
     monto,
@@ -175,14 +177,21 @@ export function AddTransactionModal({ open, onClose }: Props) {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 }}
-                className="rounded-2xl p-4 text-center"
+                className="rounded-2xl p-4 text-center space-y-3"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
               >
                 <p className="text-sm text-text-muted leading-relaxed">
-                  ¿Vale la pena este gasto en este momento?<br />
-                  <span className="text-xs text-text-dim">
-                    Completa tu perfil laboral para ver cuántas horas de trabajo representa.
-                  </span>
+                  ¿Vale la pena este gasto en este momento?
+                </p>
+                <button
+                  onClick={() => { handleClose(); navigate('/profile') }}
+                  className="text-xs font-bold px-4 py-2 rounded-xl transition-all"
+                  style={{ background: 'rgba(168,255,62,0.1)', border: '1px solid rgba(168,255,62,0.25)', color: '#A8FF3E' }}
+                >
+                  Completar perfil laboral →
+                </button>
+                <p className="text-xs text-text-dim">
+                  Necesitas ingresar tu salario para ver cuántas horas cuesta cada gasto.
                 </p>
               </motion.div>
             )}
