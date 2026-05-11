@@ -221,7 +221,7 @@ export function AddTransactionModal({ open, onClose }: Props) {
                   ✓ Sí, registrar gasto
                 </Button>
                 <button
-                  onClick={() => setStep('form')}
+                  onClick={() => { handleClose(); navigate('/dashboard') }}
                   disabled={isPending}
                   className="w-full py-3 rounded-2xl text-sm font-semibold transition-all"
                   style={{
