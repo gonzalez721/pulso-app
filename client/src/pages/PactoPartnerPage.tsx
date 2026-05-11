@@ -101,6 +101,8 @@ export function PactoPartnerPage() {
     return Object.keys(errs).length === 0
   }
 
+  const { setAuth } = useAuthStore()
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
@@ -114,14 +116,12 @@ export function PactoPartnerPage() {
         universidad: form.universidad,
         semestre: form.semestre ? Number(form.semestre) : undefined,
       } as any)
-      // Store token and accept PACTO after registration
-      const { accessToken, refreshToken } = res.data as any
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('refreshToken', refreshToken)
-      // Store pacto token to be accepted after onboarding
+      const { user, accessToken, refreshToken } = res.data as any
+      // Properly authenticate in the zustand store so API calls work
+      setAuth(user, accessToken, refreshToken)
+      // Store pacto token to be accepted after email verification
       localStorage.setItem('pendingPactoToken', token!)
       setDone(true)
-      // Redirect to verify-code
       setTimeout(() => navigate(`/verify-code?email=${encodeURIComponent(form.email)}`), 1500)
     } catch (err: any) {
       setSubmitError(err?.response?.data?.error ?? 'Error al registrar. Intenta de nuevo.')
